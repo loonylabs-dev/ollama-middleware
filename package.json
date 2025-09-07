@@ -1,0 +1,68 @@
+{
+  "name": "ollama-middleware",
+  "version": "1.0.0",
+  "description": "Complete middleware infrastructure for Ollama-based backends",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "start": "ts-node src/examples/simple-chat/index.ts",
+    "dev": "ts-node-dev --inspect --respawn src/examples/simple-chat/index.ts",
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "ollama",
+    "middleware",
+    "ai",
+    "llm",
+    "backend",
+    "typescript",
+    "express",
+    "json-cleaner",
+    "logging"
+  ],
+  "author": "Scribomate Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/planichttm/ollama-middleware.git"
+  },
+  "bugs": {
+    "url": "https://github.com/planichttm/ollama-middleware/issues"
+  },
+  "homepage": "https://github.com/planichttm/ollama-middleware#readme",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.18.2",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.10.2",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.9",
+    "ts-jest": "^29.3.4",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}
