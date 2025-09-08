@@ -5,7 +5,7 @@
 *A comprehensive TypeScript middleware library for building robust Ollama-based AI backends with advanced features like JSON cleaning, logging, error handling, and more.*
 
 <!-- Horizontal Badge Navigation Bar -->
-[![GitHub Release](https://img.shields.io/github/v/release/planichttm/ollama-middleware?style=for-the-badge&logo=github&logoColor=white&color=181717)](#-quick-start)
+[![GitHub Install](https://img.shields.io/badge/Install-GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](#-quick-start)
 [![TypeScript](https://img.shields.io/badge/TypeScript-4.9+-blue.svg?style=for-the-badge&logo=typescript&logoColor=white)](#-features)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](#-prerequisites)
 [![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#-quick-start)
