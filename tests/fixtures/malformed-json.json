@@ -1,0 +1,103 @@
+{
+  "description": "Collection of malformed JSON samples for robustness testing",
+  "samples": [
+    {
+      "name": "Missing comma between properties",
+      "input": "{\"name\": \"Elena\" \"age\": 17, \"role\": \"protagonist\"}",
+      "expectedRepair": true,
+      "category": "syntax_error"
+    },
+    {
+      "name": "Trailing comma",
+      "input": "{\"name\": \"Elena\", \"age\": 17, \"role\": \"protagonist\",}",
+      "expectedRepair": true,
+      "category": "syntax_error"
+    },
+    {
+      "name": "Unescaped quotes in strings",
+      "input": "{\"name\": \"Elena says \"Hello\"\", \"age\": 17}",
+      "expectedRepair": true,
+      "category": "string_escaping"
+    },
+    {
+      "name": "Control characters in JSON",
+      "input": "{\"name\": \"Elena\\nCharacter\", \"age\": 17,\\t\"role\": \"protagonist\"}",
+      "expectedRepair": true,
+      "category": "control_characters"
+    },
+    {
+      "name": "Mixed quotes",
+      "input": "{\"name\": 'Elena', \"age\": 17, \"role\": \"protagonist\"}",
+      "expectedRepair": true,
+      "category": "quote_mismatch"
+    },
+    {
+      "name": "Missing closing brace",
+      "input": "{\"name\": \"Elena\", \"age\": 17, \"role\": \"protagonist\"",
+      "expectedRepair": false,
+      "category": "structural_damage"
+    },
+    {
+      "name": "Extra text before JSON",
+      "input": "Here is the character: {\"name\": \"Elena\", \"age\": 17}",
+      "expectedRepair": true,
+      "category": "text_wrapper"
+    },
+    {
+      "name": "JSON wrapped in think tags",
+      "input": "<think>I need to create Elena</think>{\"name\": \"Elena\", \"age\": 17}",
+      "expectedRepair": true,
+      "category": "xml_tags"
+    },
+    {
+      "name": "Multiple JSON objects",
+      "input": "{\"name\": \"Elena\"} {\"age\": 17}",
+      "expectedRepair": true,
+      "category": "multiple_objects"
+    },
+    {
+      "name": "Complex nested structure with errors",
+      "input": "{\"name\": \"Elena\", \"personality\": {\"traits\": [\"brave\", \"curious\"], \"flaws\": [\"impulsive\" \"stubborn\"]}, \"background\": \"Born in Edinburgh\", \"goals\": [\"Master powers\", \"Find place\"]}",
+      "expectedRepair": false,
+      "category": "complex_nesting"
+    }
+  ],
+  "errorScenarios": [
+    {
+      "name": "Completely invalid JSON",
+      "input": "This is not JSON at all, just plain text response",
+      "expectedFallback": true,
+      "category": "non_json"
+    },
+    {
+      "name": "Empty response",
+      "input": "",
+      "expectedFallback": true,
+      "category": "empty"
+    },
+    {
+      "name": "Only whitespace",
+      "input": "   \\n\\t   ",
+      "expectedFallback": true,
+      "category": "whitespace"
+    },
+    {
+      "name": "HTML response instead of JSON",
+      "input": "<html><body>Error 500</body></html>",
+      "expectedFallback": true,
+      "category": "html_error"
+    },
+    {
+      "name": "JSON with undefined values",
+      "input": "{\"name\": \"Elena\", \"age\": undefined, \"role\": \"protagonist\"}",
+      "expectedRepair": true,
+      "category": "undefined_values"
+    },
+    {
+      "name": "JSON with function calls",
+      "input": "{\"name\": \"Elena\", \"age\": Math.floor(17.5), \"role\": \"protagonist\"}",
+      "expectedRepair": true,
+      "category": "function_calls"
+    }
+  ]
+}

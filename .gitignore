@@ -134,3 +134,8 @@ logs/
 
 # Test output
 test-results/
+
+# Claude Code specific files
+CLAUDE.md
+.claude/
+package-lock.json

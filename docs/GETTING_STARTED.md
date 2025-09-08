@@ -29,12 +29,7 @@ LOG_LEVEL=info
 # Ollama Model Configuration
 MODEL1_URL=http://localhost:11434
 MODEL1_NAME=mistral:latest
-
-MODEL2_URL=http://localhost:11434
-MODEL2_NAME=llama3.3:latest
-
-MODEL3_URL=http://localhost:11434
-MODEL3_NAME=gemma:latest
+MODEL1_TOKEN=optional-auth-token
 ```
 
 ### 2. Basic Use Case Implementation
@@ -210,9 +205,9 @@ console.log(model1.baseUrl);  // http://localhost:11434
 
 // Use in your use case
 class MyUseCase extends BaseAIUseCase<MyRequest, MyResult> {
-  // Override default model
+  // Override default model (optional - MODEL1 is now default)
   protected get modelConfigKey(): ModelConfigKey {
-    return 'MODEL2'; // Use MODEL2 instead of default MODEL3
+    return 'MODEL1'; // MODEL1 is the only supported model
   }
 }
 ```

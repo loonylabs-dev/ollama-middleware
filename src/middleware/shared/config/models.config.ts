@@ -13,21 +13,7 @@ export const MODELS: ModelsConfigMap = {
     baseUrl: process.env.MODEL1_URL || 'http://localhost:11434',
     bearerToken: process.env.MODEL1_TOKEN,
     temperature: 0.8,
-    description: 'Large model for complex and creative text generation tasks'
-  },
-  'MODEL2': {
-    name: process.env.MODEL2_NAME || 'mistral-small3.1:24b',
-    baseUrl: process.env.MODEL2_URL || 'http://localhost:11434',
-    bearerToken: process.env.MODEL2_TOKEN,
-    temperature: 0.8,
-    description: 'Large model for complex and creative text generation tasks'
-  },
-  'MODEL3': {
-    name: process.env.MODEL3_NAME || 'mistral:latest',
-    baseUrl: process.env.MODEL3_URL || 'http://localhost:11434',
-    bearerToken: process.env.MODEL3_TOKEN,
-    temperature: 0.8,
-    description: 'Default model for general purpose text generation'
+    description: 'Primary model for all text generation tasks'
   }
 };
 

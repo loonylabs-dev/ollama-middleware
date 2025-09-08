@@ -19,7 +19,7 @@ export abstract class BaseAIUseCase<TRequest extends BaseAIRequest, TResult exte
    * Default model configuration key to use across all use cases
    * Can be overridden by specific use cases if needed
    */
-  protected static readonly DEFAULT_MODEL_CONFIG_KEY: ModelConfigKey = 'MODEL3';
+  protected static readonly DEFAULT_MODEL_CONFIG_KEY: ModelConfigKey = 'MODEL1';
 
   /**
    * The model configuration key to use for this specific use case
