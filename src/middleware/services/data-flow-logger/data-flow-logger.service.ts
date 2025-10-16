@@ -1,6 +1,16 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+// Inline helper for context type detection
+class ContextTypeHelper {
+  static detectContextType(context: any): string {
+    if (!context) return 'unknown';
+    if (context.currentChapterNr || context.chapterNumber) return 'structured';
+    if (context.debugContext) return context.debugContext;
+    return 'generic';
+  }
+}
+
 export interface LLMRequest {
   stage: string;
   prompt: string;
@@ -24,19 +34,24 @@ export interface DataFlowEntry {
   requestId: string;
   stage: string;
   operation: 'request' | 'response' | 'error' | 'context-prep' | 'json-cleaning';
-  chapterPage: string;
+  contextId: string;
   contextType: string;
   data: any;
 }
 
 /**
- * Service for logging data flow in AI processing pipelines
- * Tracks requests, responses, and processing steps for debugging
+ * Enhanced service for logging data flow in AI processing pipelines
+ * Features: 
+ * - Ring buffer (max 1000 entries per file)
+ * - Full prompt/response storage
+ * - Request flow tracking
+ * - Stage flow summaries
  */
 export class DataFlowLoggerService {
   private static instance: DataFlowLoggerService;
   private readonly logDir = path.join(process.cwd(), 'logs', 'ollama', 'requests-data-flow');
   private currentRequestId: string | null = null;
+  private readonly MAX_ENTRIES_PER_FILE = 1000;
 
   private constructor() {
     this.ensureLogDirectoryExists();
@@ -56,22 +71,36 @@ export class DataFlowLoggerService {
   }
 
   /**
+   * Generate a unique request ID
+   */
+  private generateRequestId(): string {
+    return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  }
+
+  /**
+   * Get context identifier for logging
+   */
+  private getContextIdentifier(context: any): string {
+    const chapterNr = context?.currentChapterNr || context?.chapterNumber;
+    const page = context?.currentPage || context?.pageNumber;
+    
+    if (chapterNr && page) {
+      return `C${chapterNr}P${page}`;
+    } else if (chapterNr) {
+      return `C${chapterNr}`;
+    } else if (page) {
+      return `P${page}`;
+    }
+    
+    return 'general';
+  }
+
+  /**
    * Start a new request and return request ID
    */
   startRequest(stage: string, context: any = {}): string {
-    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    this.currentRequestId = requestId;
-    
-    this.logEntry({
-      requestId,
-      stage,
-      operation: 'request',
-      chapterPage: this.buildChapterPageId(context),
-      contextType: 'start',
-      data: { stage, startTime: new Date().toISOString(), context }
-    });
-    
-    return requestId;
+    this.currentRequestId = this.generateRequestId();
+    return this.currentRequestId;
   }
 
   /**
