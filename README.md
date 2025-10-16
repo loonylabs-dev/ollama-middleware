@@ -40,7 +40,7 @@
 
 - 🏗️ **Clean Architecture**: Base classes and interfaces for scalable AI applications
 - 🤖 **Ollama Integration**: Complete service layer with retry logic and authentication
-- 🧹 **JSON Cleaning**: Advanced JSON repair and validation system
+- 🧹 **JSON Cleaning**: Recipe-based JSON repair system with automatic strategy selection
 - 🎨 **FlatFormatter System**: Advanced data formatting for LLM consumption
 - 📊 **Comprehensive Logging**: Multi-level logging with metadata support
 - ⚙️ **Configuration Management**: Flexible model and application configuration
@@ -306,17 +306,45 @@ curl -X POST http://localhost:3000/api/chat \
 ## 🔧 Advanced Features
 
 <details>
-<summary><strong>🧹 JSON Cleaning System</strong></summary>
+<summary><strong>🧹 Recipe-Based JSON Cleaning System</strong></summary>
 
-Automatically repair malformed JSON responses from AI models:
+Advanced JSON repair with automatic strategy selection and modular operations:
 
 ```typescript
-import { JsonCleanerService } from 'ollama-middleware';
+import { JsonCleanerService, JsonCleanerFactory } from 'ollama-middleware';
 
-const malformedJson = '{"key": "value",}'; // trailing comma
+// Simple usage (async - uses new recipe system with fallback)
+const result = await JsonCleanerService.processResponseAsync(malformedJson);
+console.log(result.cleanedJson);
+
+// Legacy sync method (still works)
 const cleaned = JsonCleanerService.processResponse(malformedJson);
-console.log(cleaned.cleanedJson); // {"key": "value"}
+
+// Advanced: Quick clean with automatic recipe selection
+const result = await JsonCleanerFactory.quickClean(malformedJson);
+console.log('Success:', result.success);
+console.log('Confidence:', result.confidence);
+console.log('Changes:', result.totalChanges);
 ```
+
+**Features:**
+- 🎯 Automatic strategy selection (Conservative/Aggressive/Adaptive)
+- 🔧 Modular detectors & fixers for specific problems
+- ✨ Extracts JSON from Markdown/Think-Tags
+- 🔄 Checkpoint/Rollback support for safe repairs
+- 📊 Detailed metrics (confidence, quality, performance)
+- 🛡️ Fallback to legacy system for compatibility
+
+**Available Templates:**
+```typescript
+import { RecipeTemplates } from 'ollama-middleware';
+
+const conservativeRecipe = RecipeTemplates.conservative();
+const aggressiveRecipe = RecipeTemplates.aggressive();
+const adaptiveRecipe = RecipeTemplates.adaptive();
+```
+
+See [Recipe System Documentation](src/middleware/services/json-cleaner/recipe-system/README.md) for details.
 
 </details>
 

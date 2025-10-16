@@ -9,7 +9,7 @@ export { OllamaModelConfig, ModelsConfigMap };
  */
 export const MODELS: ModelsConfigMap = {
   'MODEL1': {
-    name: process.env.MODEL1_NAME || 'gemma3:27b',
+    name: process.env.MODEL1_NAME || 'gemma3:4b',
     baseUrl: process.env.MODEL1_URL || 'http://localhost:11434',
     bearerToken: process.env.MODEL1_TOKEN,
     temperature: 0.8,

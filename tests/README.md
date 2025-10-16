@@ -7,10 +7,16 @@ This directory contains comprehensive test suites for validating all aspects of 
 ```
 /tests
 ├── /unit              # Jest unit tests (TypeScript)
-│   └── /utils         # Utility class unit tests
-│       ├── control-char-diagnostics.test.ts
-│       ├── memory-management.test.ts
-│       └── validation.test.ts
+│   ├── /utils         # Utility class unit tests
+│   │   ├── control-char-diagnostics.test.ts
+│   │   ├── memory-management.test.ts
+│   │   └── validation.test.ts
+│   └── /json-cleaner  # Recipe system unit tests
+│       ├── cleaning-engine.conservative.valid.test.ts
+│       ├── cleaning-engine.markdown.extract.test.ts
+│       ├── cleaning-engine.thinktag.extract.test.ts
+│       ├── cleaning-engine.missing-comma.test.ts
+│       └── cleaning-engine.structural-repair.test.ts
 ├── /manual            # Manual/interactive test scripts (TypeScript)
 │   └── smoke-test.ts
 ├── /basic             # Component-level tests (JavaScript)
@@ -36,11 +42,18 @@ This directory contains comprehensive test suites for validating all aspects of 
 - **Framework**: Jest + ts-jest
 - **Purpose**: Fast, isolated tests for utility functions and classes
 - **Tests Included**:
-  - `utils/control-char-diagnostics.test.ts` - Control character detection and repair
-  - `utils/memory-management.test.ts` - Memory usage utilities
-  - `utils/validation.test.ts` - Validation helper functions
+  - **Utils Tests**:
+    - `utils/control-char-diagnostics.test.ts` - Control character detection and repair
+    - `utils/memory-management.test.ts` - Memory usage utilities
+    - `utils/validation.test.ts` - Validation helper functions
+  - **Recipe System Tests**:
+    - `json-cleaner/cleaning-engine.conservative.valid.test.ts` - Conservative recipe with valid JSON
+    - `json-cleaner/cleaning-engine.markdown.extract.test.ts` - Markdown code block extraction
+    - `json-cleaner/cleaning-engine.thinktag.extract.test.ts` - Think tag extraction
+    - `json-cleaner/cleaning-engine.missing-comma.test.ts` - Missing comma repair
+    - `json-cleaner/cleaning-engine.structural-repair.test.ts` - Structural bracket repair
 
-**Expected Results**: All unit tests should pass with 70%+ code coverage
+**Expected Results**: All unit tests should pass (33+ tests) with 70%+ code coverage
 
 **Run Command**:
 ```bash
@@ -201,9 +214,15 @@ node e2e/test-workflow.js
 ### ✅ Success Indicators
 
 **Unit Tests**:
-- All Jest tests pass
+- All Jest tests pass (33+ tests including Recipe System)
 - 70%+ code coverage achieved
 - No type errors or import issues
+- Recipe System tests validate:
+  - Conservative recipe with valid JSON
+  - Markdown extraction (```json...```)
+  - Think tag extraction (<think>...</think>)
+  - Missing comma fixes
+  - Structural repairs (unbalanced brackets)
 
 **Basic Tests**:
 - All 6 services show "✅" status

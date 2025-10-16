@@ -5,6 +5,8 @@ import { JsonValidationHelper } from './helpers/json-validation.helper';
 import { JsonInspector } from './utils/json-inspector.util';
 import { JsonCleanerLogger } from './json-cleaner-logger';
 import { jsonConsole } from './utils/console-logger.util';
+import { CleaningEngine } from './recipe-system/core/cleaning-engine';
+import { RecipeTemplates } from './recipe-system/recipes/templates';
 
 // Import parsers
 import { ThinkTagParser } from './parsers/think-tag.parser';
@@ -71,16 +73,51 @@ export class JsonCleanerService {
       return { cleanedJson: trimmedResponse, thinking: '' };
     }
 
-    // STEP 3: Process through orchestrator
+    // Fallback: legacy orchestrator
     jsonConsole.logWithPrefix('[JsonCleanerService] Processing through orchestrator...');
     const result = this.orchestrator.processResponse(trimmedResponse);
     
-    // STEP 4: Final validation
     if (!JsonValidationHelper.isValid(result.cleanedJson)) {
       jsonConsole.logWithPrefix('[JsonCleanerService] ⚠️ Warning: Final result is not valid JSON');
     }
 
     return result;
+  }
+
+  /**
+   * Async variant using the new recipe system with legacy fallback
+   */
+  public static async processResponseAsync(response: string): Promise<CleanedJsonResult> {
+    this.initialize();
+
+    if (!response || response.trim().length === 0) {
+      throw new Error('Empty input provided - cannot process');
+    }
+
+    const trimmedResponse = response.trim();
+    if (JsonValidationHelper.isValid(trimmedResponse)) {
+      return { cleanedJson: trimmedResponse, thinking: '' };
+    }
+
+    try {
+      const engine = CleaningEngine.getInstance();
+      const suggestion = engine.analyzeAndSuggestRecipe(trimmedResponse);
+      const recipe = suggestion.recommendedRecipe === 'conservative'
+        ? RecipeTemplates.conservative()
+        : suggestion.recommendedRecipe === 'aggressive'
+          ? RecipeTemplates.aggressive()
+          : RecipeTemplates.adaptive();
+
+      const result = await engine.clean(trimmedResponse, recipe, { source: 'service', mode: suggestion.recommendedRecipe });
+      if (result.success && result.cleanedJson) {
+        return { cleanedJson: result.cleanedJson, thinking: '' };
+      }
+    } catch {
+      // ignore and fallback
+    }
+
+    const fallback = this.orchestrator.processResponse(trimmedResponse);
+    return fallback;
   }
 
   /**
