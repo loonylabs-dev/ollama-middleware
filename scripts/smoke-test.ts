@@ -3,10 +3,14 @@
  * Tests the enhanced logging and data flow features
  */
 
+import * as dotenv from 'dotenv';
 import { OllamaService } from '../src/middleware/services/ollama/ollama.service';
 import { DataFlowLoggerService } from '../src/middleware/services/data-flow-logger/data-flow-logger.service';
 import { ControlCharDiagnostics } from '../src/middleware/services/json-cleaner/utils/control-char-diagnostics.util';
 import { getMemoryUsage } from '../src/middleware/shared/utils/memory-management.utils';
+
+// Load environment variables
+dotenv.config();
 
 async function runSmokeTest() {
   console.log('🚀 Starting Ollama Middleware Smoke Test');
@@ -39,6 +43,13 @@ async function runSmokeTest() {
   console.log('🤖 Test 4: Ollama Service with gemma3:4b');
   console.log('Attempting to call Ollama API...');
   
+  // Load configuration from .env
+  const baseUrl = process.env.MODEL1_URL || 'http://localhost:11434';
+  const authToken = process.env.MODEL1_TOKEN;
+  
+  console.log(`Using base URL: ${baseUrl}`);
+  console.log(`Auth token configured: ${!!authToken}`);
+  
   const ollamaService = new OllamaService();
   
   try {
@@ -48,7 +59,8 @@ async function runSmokeTest() {
       {
         model: 'gemma3:4b',
         temperature: 0.7,
-        baseUrl: 'http://localhost:11434',
+        baseUrl,
+        authToken,
         debugContext: 'smoke-test',
         sessionId: `smoke-${Date.now()}`
       }
