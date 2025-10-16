@@ -1,4 +1,4 @@
-import { ControlCharDiagnostics } from '../../src/middleware/services/json-cleaner/utils/control-char-diagnostics.util';
+import { ControlCharDiagnostics } from '../../../src/middleware/services/json-cleaner/utils/control-char-diagnostics.util';
 
 describe('ControlCharDiagnostics', () => {
   describe('diagnose', () => {

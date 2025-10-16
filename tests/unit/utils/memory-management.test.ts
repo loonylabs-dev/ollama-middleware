@@ -1,4 +1,4 @@
-import { getMemoryUsage, isMemoryUsageCritical } from '../../src/middleware/shared/utils/memory-management.utils';
+import { getMemoryUsage, isMemoryUsageCritical } from '../../../src/middleware/shared/utils/memory-management.utils';
 
 describe('Memory Management Utils', () => {
   describe('getMemoryUsage', () => {

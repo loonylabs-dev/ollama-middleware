@@ -2,7 +2,54 @@
 
 This directory contains comprehensive test suites for validating all aspects of the Ollama Middleware system, from individual components to complete end-to-end workflows.
 
+## 📁 Test Structure
+
+```
+/tests
+├── /unit              # Jest unit tests (TypeScript)
+│   └── /utils         # Utility class unit tests
+│       ├── control-char-diagnostics.test.ts
+│       ├── memory-management.test.ts
+│       └── validation.test.ts
+├── /manual            # Manual/interactive test scripts (TypeScript)
+│   └── smoke-test.ts
+├── /basic             # Component-level tests (JavaScript)
+│   └── test-middleware.js
+├── /integration       # Integration tests (JavaScript)
+│   └── test-flat-formatter.js
+├── /robustness        # Error handling & resilience tests (JavaScript)
+│   └── test-json-handling.js
+├── /e2e               # End-to-end workflow tests (JavaScript)
+│   └── test-workflow.js
+├── /fixtures          # Test data files
+│   ├── malformed-json.json
+│   └── test-characters.json
+└── /utils             # Test helper utilities
+    └── test-helpers.js
+```
+
 ## 📋 Test Categories
+
+### 🧪 Unit Tests (`unit/`)
+**Jest-based TypeScript unit tests for individual utilities and classes**
+- **Location**: `tests/unit/`
+- **Framework**: Jest + ts-jest
+- **Purpose**: Fast, isolated tests for utility functions and classes
+- **Tests Included**:
+  - `utils/control-char-diagnostics.test.ts` - Control character detection and repair
+  - `utils/memory-management.test.ts` - Memory usage utilities
+  - `utils/validation.test.ts` - Validation helper functions
+
+**Expected Results**: All unit tests should pass with 70%+ code coverage
+
+**Run Command**:
+```bash
+npm run test:unit              # Run all unit tests
+npm run test:unit:watch        # Watch mode for development
+npm run test:unit:coverage     # With coverage report
+```
+
+---
 
 ### 🔧 Basic Tests (`basic/`)
 **Component-level validation of individual services**
@@ -77,6 +124,33 @@ This directory contains comprehensive test suites for validating all aspects of 
 
 ---
 
+### 🛠️ Manual Tests (`manual/`)
+**Interactive TypeScript test scripts for manual validation**
+- **Location**: `tests/manual/`
+- **Purpose**: Hands-on testing with real services and APIs
+- **Tests Included**:
+  - `smoke-test.ts` - Quick validation of core features with real Ollama API
+
+**Smoke Test Features**:
+- Memory management utilities
+- Control character diagnostics
+- Data flow logger
+- Real Ollama API call with gemma3:4b
+- Log file verification
+- Enhanced logging features validation
+
+**Prerequisites for Smoke Test**:
+- ✅ Ollama server running (`ollama serve`)
+- ✅ Model available (`ollama pull gemma3:4b`)
+- ✅ Environment configured (`.env` file)
+
+**Run Command**:
+```bash
+npm run test:manual:smoke      # Run smoke test
+```
+
+---
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -99,14 +173,20 @@ This directory contains comprehensive test suites for validating all aspects of 
 ### Running Tests
 
 ```bash
-# Run all test suites
+# Run all automated test suites
 npm run test:all
 
 # Run individual test categories
-npm run test:basic        # Component tests only
-npm run test:integration  # FlatFormatter tests only  
-npm run test:robustness   # JSON/Error handling tests only
-npm run test:e2e          # End-to-end tests (requires Ollama)
+npm run test:unit              # Jest unit tests
+npm run test:unit:watch        # Watch mode
+npm run test:unit:coverage     # With coverage
+npm run test:basic             # Component tests
+npm run test:integration       # FlatFormatter tests
+npm run test:robustness        # JSON/Error handling tests
+npm run test:e2e               # End-to-end tests (requires Ollama)
+
+# Run manual/interactive tests
+npm run test:manual:smoke      # Smoke test with real API
 
 # Manual execution (alternative)
 cd tests
@@ -119,6 +199,11 @@ node e2e/test-workflow.js
 ## 📊 Test Results Interpretation
 
 ### ✅ Success Indicators
+
+**Unit Tests**:
+- All Jest tests pass
+- 70%+ code coverage achieved
+- No type errors or import issues
 
 **Basic Tests**:
 - All 6 services show "✅" status
@@ -140,6 +225,12 @@ node e2e/test-workflow.js
 - Context building with FlatFormatter succeeds
 - JSON schema and system message properly formatted
 - Graceful handling of connection issues
+
+**Manual Smoke Test**:
+- All 4 component checks pass (Memory, ControlChar, Logger, Ollama)
+- Real Ollama API responds successfully
+- Log files created with enhanced data
+- Response metrics captured
 
 ### ⚠️ Common Issues and Solutions
 
@@ -258,13 +349,17 @@ jobs:
 ### Before Committing
 ```bash
 npm run build
-npm run test:all
+npm run test:unit          # Fast unit tests
+npm run test:all           # All automated tests
 ```
 
 ### Before Releasing
 ```bash
-npm run test:all
-npm run test:e2e  # With Ollama running
+npm run build
+npm run test:unit:coverage # Unit tests with coverage
+npm run test:all           # All automated tests
+npm run test:e2e           # E2E with Ollama running
+npm run test:manual:smoke  # Manual smoke test
 ```
 
 ### Performance Monitoring

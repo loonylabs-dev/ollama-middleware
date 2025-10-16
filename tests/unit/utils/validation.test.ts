@@ -4,7 +4,7 @@ import {
   isNonEmptyString,
   isPositiveNumber,
   isValidRange
-} from '../../src/middleware/shared/utils/validation.utils';
+} from '../../../src/middleware/shared/utils/validation.utils';
 
 describe('Validation Utils', () => {
   describe('validateRequestParams', () => {
