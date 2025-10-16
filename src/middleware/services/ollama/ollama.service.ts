@@ -202,6 +202,7 @@ export class OllamaService {
         // Add response info
         debugInfo.responseTimestamp = new Date();
         debugInfo.response = aiResponse.message.content;
+        debugInfo.rawResponseData = aiResponse;
         
         // Try to extract thinking content
         const thinkMatch = aiResponse.message.content.match(/<think>([\s\S]*?)<\/think>/);
@@ -291,6 +292,7 @@ export class OllamaService {
                 
                 debugInfo.responseTimestamp = new Date();
                 debugInfo.response = aiResponse.message.content;
+                debugInfo.rawResponseData = aiResponse;
                 
                 const thinkMatch = aiResponse.message.content.match(/<think>([\s\S]*?)<\/think>/);
                 if (thinkMatch && thinkMatch[1]) {
@@ -467,6 +469,7 @@ export class OllamaService {
     aiResponse.sessionId = sessionId;
     debugInfo.responseTimestamp = new Date();
     debugInfo.response = aiResponse.message.content;
+    debugInfo.rawResponseData = aiResponse;
     
     const thinkMatch = aiResponse.message.content.match(/<think>([\s\S]*?)<\/think>/);
     if (thinkMatch && thinkMatch[1]) {

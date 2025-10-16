@@ -104,7 +104,7 @@ export class DataFlowLoggerService {
   }
 
   /**
-   * Log LLM request
+   * Log LLM request with full prompt/system message storage
    */
   logLLMRequest(request: LLMRequest, context: any = {}, requestId?: string): void {
     const id = requestId || this.currentRequestId || 'unknown';
@@ -113,11 +113,15 @@ export class DataFlowLoggerService {
       requestId: id,
       stage: request.stage,
       operation: 'request',
-      chapterPage: this.buildChapterPageId(context),
-      contextType: 'llm-request',
+      contextId: this.getContextIdentifier(context),
+      contextType: ContextTypeHelper.detectContextType(context),
       data: {
-        prompt: request.prompt.substring(0, 200) + '...',
-        systemMessage: request.systemMessage.substring(0, 200) + '...',
+        promptLength: request.prompt.length,
+        systemMessageLength: request.systemMessage.length,
+        promptPreview: request.prompt.substring(0, 500) + '...',
+        systemMessagePreview: request.systemMessage.substring(0, 300) + '...',
+        fullPrompt: request.prompt,
+        fullSystemMessage: request.systemMessage,
         modelName: request.modelName,
         temperature: request.temperature,
         contextInfo: request.contextInfo
@@ -126,7 +130,7 @@ export class DataFlowLoggerService {
   }
 
   /**
-   * Log LLM response
+   * Log LLM response with full response storage
    */
   logLLMResponse(stage: string, response: LLMResponse, context: any = {}, requestId?: string): void {
     const id = requestId || this.currentRequestId || 'unknown';
@@ -134,14 +138,22 @@ export class DataFlowLoggerService {
     this.logEntry({
       requestId: id,
       stage,
-      operation: 'response',
-      chapterPage: this.buildChapterPageId(context),
-      contextType: 'llm-response',
+      operation: response.error ? 'error' : 'response',
+      contextId: this.getContextIdentifier(context),
+      contextType: ContextTypeHelper.detectContextType(context),
       data: {
-        rawResponse: response.rawResponse.substring(0, 500) + '...',
+        responseLength: response.rawResponse?.length || 0,
+        cleanedResponseLength: response.cleanedResponse?.length || 0,
         processingTime: response.processingTime,
         tokensUsed: response.tokensUsed,
-        hasError: !!response.error
+        responsePreview: response.rawResponse?.substring(0, 500) + '...',
+        fullResponse: response.rawResponse,
+        cleanedResponse: response.cleanedResponse,
+        error: response.error ? {
+          message: response.error.message,
+          stack: response.error.stack,
+          type: response.error.constructor?.name
+        } : undefined
       }
     });
   }
@@ -149,71 +161,164 @@ export class DataFlowLoggerService {
   /**
    * Log context preparation
    */
-  logContextPreparation(stage: string, contextData: any, context: any = {}): void {
+  logContextPreparation(stage: string, context: any, contextPreparationDetails: any): void {
     const id = this.currentRequestId || 'unknown';
     
     this.logEntry({
       requestId: id,
       stage,
       operation: 'context-prep',
-      chapterPage: this.buildChapterPageId(context),
-      contextType: 'context',
-      data: contextData
+      contextId: this.getContextIdentifier(context),
+      contextType: ContextTypeHelper.detectContextType(context),
+      data: {
+        contextSources: contextPreparationDetails.sources || [],
+        contextSize: JSON.stringify(contextPreparationDetails).length,
+        enrichmentSteps: contextPreparationDetails.enrichmentSteps || [],
+        contextFeatures: this.extractContextFeatures(context)
+      }
     });
   }
 
   /**
    * Log JSON cleaning operation
    */
-  logJsonCleaning(stage: string, cleaningData: any, context: any = {}): void {
+  logJsonCleaning(stage: string, context: any, cleaningDetails: {
+    input: string;
+    output?: string;
+    method: string;
+    success: boolean;
+    iterations?: number;
+    error?: any;
+  }): void {
     const id = this.currentRequestId || 'unknown';
     
     this.logEntry({
       requestId: id,
       stage,
       operation: 'json-cleaning',
-      chapterPage: this.buildChapterPageId(context),
-      contextType: 'json-clean',
-      data: cleaningData
+      contextId: this.getContextIdentifier(context),
+      contextType: ContextTypeHelper.detectContextType(context),
+      data: {
+        inputLength: cleaningDetails.input.length,
+        outputLength: cleaningDetails.output?.length || 0,
+        method: cleaningDetails.method,
+        success: cleaningDetails.success,
+        iterations: cleaningDetails.iterations,
+        inputPreview: cleaningDetails.input.substring(0, 200) + '...',
+        outputPreview: cleaningDetails.output?.substring(0, 200) + '...',
+        error: cleaningDetails.error ? {
+          message: cleaningDetails.error.message,
+          type: cleaningDetails.error.constructor?.name
+        } : undefined
+      }
     });
   }
 
+  /**
+   * Log complete flow for a stage
+   */
+  logStageFlow(stage: string, context: any, flowSummary: {
+    totalDuration: number;
+    contextPrepDuration?: number;
+    llmRequestDuration?: number;
+    jsonCleaningDuration?: number;
+    success: boolean;
+    outputSize?: number;
+    error?: any;
+  }): void {
+    const id = this.currentRequestId || 'unknown';
+    
+    this.logEntry({
+      requestId: id,
+      stage,
+      operation: 'context-prep',
+      contextId: this.getContextIdentifier(context),
+      contextType: ContextTypeHelper.detectContextType(context),
+      data: {
+        flowType: 'stage-summary',
+        ...flowSummary
+      }
+    });
+  }
+
+  /**
+   * Extract context features for detailed logging
+   */
+  private extractContextFeatures(context: any): any {
+    if (!context) return {};
+    
+    return {
+      hasDebugContext: !!context.debugContext,
+      hasContextInfo: !!context.contextInfo,
+      contextKeys: context ? Object.keys(context).filter(k => !k.startsWith('_')).slice(0, 10) : []
+    };
+  }
+
+  /**
+   * Get log file path for a context
+   */
+  private getLogFilePath(context: any): string {
+    const identifier = this.getContextIdentifier(context);
+    const date = new Date();
+    const dateStr = date.toISOString().split('T')[0];
+    const fileName = `${identifier}_${dateStr}_flow.json`;
+    return path.join(this.logDir, fileName);
+  }
+
+  /**
+   * Log entry with ring buffer (max 1000 entries per file)
+   */
   private logEntry(entry: Omit<DataFlowEntry, 'timestamp'>): void {
     const fullEntry: DataFlowEntry = {
       ...entry,
       timestamp: new Date().toISOString()
     };
 
-    const logFileName = `dataflow_${new Date().toISOString().split('T')[0]}.json`;
-    const logFilePath = path.join(this.logDir, logFileName);
+    const logFilePath = this.getLogFilePath({});
 
     try {
       let existingEntries: DataFlowEntry[] = [];
       if (fs.existsSync(logFilePath)) {
         const existingContent = fs.readFileSync(logFilePath, 'utf8');
-        existingEntries = JSON.parse(existingContent);
+        try {
+          const parsed = JSON.parse(existingContent);
+          existingEntries = Array.isArray(parsed) ? parsed : [parsed];
+        } catch (e) {
+          console.error(`Failed to parse existing log file ${logFilePath}:`, e);
+          existingEntries = [];
+        }
       }
 
       existingEntries.push(fullEntry);
-      fs.writeFileSync(logFilePath, JSON.stringify(existingEntries, null, 2));
+
+      // Ring buffer: Keep only last 1000 entries per file
+      if (existingEntries.length > this.MAX_ENTRIES_PER_FILE) {
+        existingEntries = existingEntries.slice(-this.MAX_ENTRIES_PER_FILE);
+      }
+
+      fs.writeFileSync(logFilePath, JSON.stringify(existingEntries, null, 2), 'utf-8');
     } catch (error) {
       console.error('Failed to write data flow log:', error);
     }
   }
 
-  private buildChapterPageId(context: any): string {
-    const chapter = context?.currentChapterNr || context?.chapterNumber;
-    const page = context?.currentPage || context?.pageNumber;
-    
-    if (chapter && page) {
-      return `C${chapter}P${page}`;
-    } else if (chapter) {
-      return `C${chapter}`;
-    } else if (page) {
-      return `P${page}`;
+  /**
+   * Get flow entries for a specific request
+   */
+  getRequestFlow(context: any, requestId: string): DataFlowEntry[] {
+    const filePath = this.getLogFilePath(context);
+
+    try {
+      if (fs.existsSync(filePath)) {
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const entries: DataFlowEntry[] = JSON.parse(content);
+        return entries.filter(e => e.requestId === requestId);
+      }
+    } catch (error) {
+      console.error(`Failed to read flow log ${filePath}:`, error);
     }
-    
-    return 'unknown';
+
+    return [];
   }
 
   /**
