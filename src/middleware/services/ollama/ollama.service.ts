@@ -24,6 +24,7 @@ export interface OllamaRequestOptions {
   frequency_penalty?: number;
   presence_penalty?: number;
   repeat_last_n?: number;
+  num_predict?: number;
   // Debug context
   debugContext?: string;
   // Session ID for conversation continuity
@@ -72,6 +73,7 @@ export class OllamaService {
       frequency_penalty,
       presence_penalty,
       repeat_last_n,
+      num_predict,
       debugContext,
       sessionId = uuidv4(),
       chapterNumber,
@@ -110,7 +112,8 @@ export class OllamaService {
         ...(top_k !== undefined && { top_k }),
         ...(frequency_penalty !== undefined && { frequency_penalty }),
         ...(presence_penalty !== undefined && { presence_penalty }),
-        ...(repeat_last_n !== undefined && { repeat_last_n })
+        ...(repeat_last_n !== undefined && { repeat_last_n }),
+        ...(num_predict !== undefined && { num_predict })
       }
     };
 
@@ -174,7 +177,8 @@ export class OllamaService {
             top_k,
             frequency_penalty,
             presence_penalty,
-            repeat_last_n
+            repeat_last_n,
+            num_predict
           }
         }
       },

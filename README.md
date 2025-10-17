@@ -261,6 +261,9 @@ node test-robustness.js
 
 # Test FlatFormatter system
 node test-flat-formatter.js
+
+# Test parameter limits and token control
+node tests/integration/test-parameter-limits.js
 ```
 
 <details>
@@ -271,6 +274,60 @@ node test-flat-formatter.js
 - ✅ **JSON Robustness**: 80% success rate on malformed JSON repair
 - ✅ **Error Handling**: 100% graceful handling of extreme scenarios
 - ✅ **Performance**: Large JSON processing at 1.1M chars/second
+- ✅ **Parameter Limits**: Token limiting successfully controls output length
+
+</details>
+
+### 🐦 Tweet Generator Example
+
+<details>
+<summary><strong>💬 Demonstrating Token Limiting with Social Media Content</strong></summary>
+
+The **Tweet Generator** example showcases parameter configuration for controlling output length:
+
+```typescript
+import { TweetGeneratorUseCase } from 'ollama-middleware';
+
+const tweetGenerator = new TweetGeneratorUseCase();
+
+const result = await tweetGenerator.execute({
+  prompt: 'The importance of clean code in software development'
+});
+
+console.log(result.tweet);          // Generated tweet
+console.log(result.characterCount); // Character count
+console.log(result.withinLimit);    // true if ≤ 280 chars
+```
+
+**Key Features:**
+- 🎯 **Token Limiting**: Uses `num_predict: 70` to limit output to ~280 characters
+- 📊 **Character Validation**: Automatically checks if output is within Twitter's limit
+- 🎨 **Marketing Preset**: Optimized parameters for engaging, concise content
+- ✅ **Testable**: Integration test verifies parameter effectiveness
+
+**Parameter Configuration:**
+```typescript
+protected getParameterOverrides(): ModelParameterOverrides {
+  return {
+    num_predict: 70,        // Limit to ~280 characters
+    temperatureOverride: 0.7,
+    repeatPenalty: 1.3,
+    frequencyPenalty: 0.3,
+    presencePenalty: 0.2,
+    topP: 0.9,
+    topK: 50,
+    repeatLastN: 32
+  };
+}
+```
+
+This example demonstrates:
+- How to configure parameters for specific output requirements
+- Token limiting as a practical use case
+- Validation and testing of parameter effectiveness
+- Real-world application (social media content generation)
+
+See `src/examples/tweet-generator/` for full implementation.
 
 </details>
 
@@ -382,6 +439,61 @@ const config = getModelConfig('MODEL1');
 console.log(config.name);     // Value from MODEL1_NAME env variable
 console.log(config.baseUrl);  // Value from MODEL1_URL or default localhost
 ```
+
+</details>
+
+<details>
+<summary><strong>🎛️ Parameter Configuration</strong></summary>
+
+Ollama-middleware provides fine-grained control over model parameters to optimize output for different use cases:
+
+```typescript
+import { BaseAIUseCase, ModelParameterOverrides } from 'ollama-middleware';
+
+class MyUseCase extends BaseAIUseCase<MyRequest, MyResult> {
+  protected getParameterOverrides(): ModelParameterOverrides {
+    return {
+      temperatureOverride: 0.8,      // Control creativity vs. determinism
+      repeatPenalty: 1.3,             // Reduce word repetition
+      frequencyPenalty: 0.2,          // Penalize frequent words
+      presencePenalty: 0.2,           // Encourage topic diversity
+      topP: 0.92,                     // Nucleus sampling threshold
+      topK: 60,                       // Vocabulary selection limit
+      repeatLastN: 128                // Context window for repetition
+    };
+  }
+}
+```
+
+**Parameter Levels:**
+- **Global defaults**: Set in `ModelParameterManagerService`
+- **Use-case level**: Override via `getParameterOverrides()` method
+- **Request level**: Pass parameters directly in requests
+
+**Available Presets:**
+
+```typescript
+import { ModelParameterManagerService } from 'ollama-middleware';
+
+// Use curated presets for common use cases
+const creativeParams = ModelParameterManagerService.getDefaultParametersForType('creative_writing');
+const factualParams = ModelParameterManagerService.getDefaultParametersForType('factual');
+const poeticParams = ModelParameterManagerService.getDefaultParametersForType('poetic');
+const dialogueParams = ModelParameterManagerService.getDefaultParametersForType('dialogue');
+const technicalParams = ModelParameterManagerService.getDefaultParametersForType('technical');
+const marketingParams = ModelParameterManagerService.getDefaultParametersForType('marketing');
+```
+
+**Presets Include:**
+- 📚 **Creative Writing**: Novels, stories, narrative fiction
+- 📊 **Factual**: Reports, documentation, journalism
+- 🎭 **Poetic**: Poetry, lyrics, artistic expression
+- 💬 **Dialogue**: Character dialogue, conversational content
+- 🔧 **Technical**: Code documentation, API references
+- 📢 **Marketing**: Advertisements, promotional content
+
+For detailed documentation about all parameters, value ranges, and preset configurations, see:
+**[Ollama Parameters Guide](./docs/OLLAMA_PARAMETERS.md)**
 
 </details>
 

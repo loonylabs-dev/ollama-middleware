@@ -11,6 +11,7 @@ import {
   genrePreset,
   targetAudiencePreset 
 } from '../../middleware/services/flat-formatter';
+import { ModelParameterOverrides } from '../../middleware/services/model-parameter-manager/model-parameter-manager.service';
 
 /**
  * Character generation prompt data
@@ -99,6 +100,45 @@ export class CharacterGeneratorUseCase extends BaseAIUseCase<CharacterPromptData
    */
   protected getUserTemplate(): (formattedPrompt: string) => string {
     return CHARACTER_GENERATOR_USER_TEMPLATE;
+  }
+
+  /**
+   * Override model parameters for character generation
+   * 
+   * Uses the Creative Writing preset optimized for generating rich, varied character descriptions.
+   * This configuration balances creativity with coherence, ensuring characters are interesting
+   * while maintaining consistency across all fields.
+   * 
+   * @returns ModelParameterOverrides with Creative Writing preset
+   * 
+   * **Parameter Selection Rationale:**
+   * - `temperature: 0.8` - Higher temperature for creative, varied character traits and descriptions
+   * - `repeatPenalty: 1.3` - Moderate penalty to reduce word repetition while allowing natural language flow
+   * - `frequencyPenalty: 0.2` - Encourages diverse vocabulary for richer character descriptions
+   * - `presencePenalty: 0.2` - Promotes introducing new character traits and avoiding clichés
+   * - `topP: 0.92` - High nucleus sampling for creative token selection
+   * - `topK: 60` - Moderate vocabulary diversity for balanced output
+   * - `repeatLastN: 128` - Extended context window to maintain consistency across all character fields
+   * 
+   * **Expected Impact:**
+   * - More unique and memorable characters with distinct personalities
+   * - Reduced repetitive phrasing across character description fields
+   * - Natural, fluid writing style that doesn't feel formulaic
+   * - Consistent character voice throughout the entire description
+   * 
+   * For more information about parameter presets, see docs/OLLAMA_PARAMETERS.md
+   */
+  protected getParameterOverrides(): ModelParameterOverrides {
+    // Creative Writing preset - optimized for character generation
+    return {
+      temperatureOverride: 0.8,
+      repeatPenalty: 1.3,
+      frequencyPenalty: 0.2,
+      presencePenalty: 0.2,
+      topP: 0.92,
+      topK: 60,
+      repeatLastN: 128
+    };
   }
 
   /**

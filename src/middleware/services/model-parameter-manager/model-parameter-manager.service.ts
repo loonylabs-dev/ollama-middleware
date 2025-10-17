@@ -9,6 +9,7 @@ export interface ModelParameters {
   frequencyPenalty?: number;
   presencePenalty?: number;
   repeatLastN?: number;
+  numPredict?: number;
 }
 
 /**
@@ -22,6 +23,7 @@ export interface ModelParameterOverrides {
   frequencyPenalty?: number;
   presencePenalty?: number;
   repeatLastN?: number;
+  num_predict?: number;
 }
 
 /**
@@ -57,7 +59,8 @@ export class ModelParameterManagerService {
       topK: overrides.topK,
       frequencyPenalty: overrides.frequencyPenalty,
       presencePenalty: overrides.presencePenalty,
-      repeatLastN: overrides.repeatLastN
+      repeatLastN: overrides.repeatLastN,
+      numPredict: overrides.num_predict
     };
   }
 
@@ -111,6 +114,12 @@ export class ModelParameterManagerService {
       }
     }
 
+    // numPredict should be a positive integer (max tokens to generate)
+    if (validated.numPredict !== undefined) {
+      if (validated.numPredict < 1) validated.numPredict = 1;
+      validated.numPredict = Math.round(validated.numPredict);
+    }
+
     return validated;
   }
 
@@ -141,6 +150,9 @@ export class ModelParameterManagerService {
     }
     if (parameters.repeatLastN !== undefined) {
       result.repeatLastN = parameters.repeatLastN;
+    }
+    if (parameters.numPredict !== undefined) {
+      result.numPredict = parameters.numPredict;
     }
 
     return result;
@@ -176,29 +188,122 @@ export class ModelParameterManagerService {
     if (parameters.repeatLastN !== undefined) {
       options.repeat_last_n = parameters.repeatLastN;
     }
+    if (parameters.numPredict !== undefined) {
+      options.num_predict = parameters.numPredict;
+    }
 
     return options;
   }
 
   /**
    * Create default parameters for a given model type or use case
-   * @param modelType The type of model (e.g., 'creative', 'analytical', 'balanced')
+   * 
+   * Available presets:
+   * - 'creative' / 'creative_writing': Optimized for novels, stories, narrative fiction
+   * - 'factual': Optimized for reports, documentation, journalism
+   * - 'poetic': Optimized for poetry, lyrics, artistic expression
+   * - 'dialogue': Optimized for character dialogue, conversational content
+   * - 'technical': Optimized for code documentation, technical guides
+   * - 'marketing': Optimized for advertisements, promotional content
+   * - 'analytical': General analytical tasks (legacy)
+   * - 'balanced': General balanced approach (default)
+   * 
+   * @param modelType The type of model or use case
    * @returns Default parameters for the model type
+   * 
+   * For detailed documentation about each preset, see docs/OLLAMA_PARAMETERS.md
    */
   public static getDefaultParametersForType(modelType: string): ModelParameters {
     switch (modelType.toLowerCase()) {
+      // Creative Writing preset - for novels, stories, narrative fiction
       case 'creative':
+      case 'creative_writing':
+        return {
+          temperature: 0.8,
+          repeatPenalty: 1.3,
+          frequencyPenalty: 0.2,
+          presencePenalty: 0.2,
+          topP: 0.92,
+          topK: 60,
+          repeatLastN: 128
+        };
+      
+      // Factual Content preset - for reports, documentation, journalism
+      case 'factual':
+        return {
+          temperature: 0.4,
+          repeatPenalty: 1.2,
+          frequencyPenalty: 0.1,
+          presencePenalty: 0.1,
+          topP: 0.85,
+          topK: 40,
+          repeatLastN: 96
+        };
+      
+      // Poetic Text preset - for poetry, lyrics, artistic expression
+      case 'poetic':
+      case 'poetry':
         return {
           temperature: 1.0,
+          repeatPenalty: 1.2,
+          frequencyPenalty: 0.3,
+          presencePenalty: 0.2,
           topP: 0.95,
-          repeatPenalty: 1.1
+          topK: 80,
+          repeatLastN: 64
         };
+      
+      // Dialogue & Conversation preset - for character dialogue, chat
+      case 'dialogue':
+      case 'conversation':
+      case 'conversational':
+        return {
+          temperature: 0.7,
+          repeatPenalty: 1.1,
+          frequencyPenalty: 0.3,
+          presencePenalty: 0.0,
+          topP: 0.9,
+          topK: 50,
+          repeatLastN: 32
+        };
+      
+      // Technical Documentation preset - for code docs, API references
+      case 'technical':
+      case 'tech':
+      case 'documentation':
+        return {
+          temperature: 0.3,
+          repeatPenalty: 1.05,
+          frequencyPenalty: 0.0,
+          presencePenalty: 0.1,
+          topP: 0.8,
+          topK: 30,
+          repeatLastN: 128
+        };
+      
+      // Marketing Copy preset - for ads, sales copy, promotional content
+      case 'marketing':
+      case 'advertising':
+      case 'promotional':
+        return {
+          temperature: 0.7,
+          repeatPenalty: 1.3,
+          frequencyPenalty: 0.4,
+          presencePenalty: 0.3,
+          topP: 0.9,
+          topK: 60,
+          repeatLastN: 96
+        };
+      
+      // Legacy presets for backward compatibility
       case 'analytical':
         return {
           temperature: 0.3,
           topP: 0.8,
           repeatPenalty: 1.05
         };
+      
+      // Balanced preset (default)
       case 'balanced':
       default:
         return {

@@ -3,6 +3,7 @@ import { getModelConfig, ModelConfigKey, ValidatedOllamaModelConfig } from '../.
 import { ResponseProcessorService } from '../../services/response-processor/response-processor.service';
 import { BaseAIRequest, BaseAIResult } from '../../shared/types/base-request.types';
 import { logger } from '../../shared/utils/logging.utils';
+import { ModelParameterManagerService, ModelParameterOverrides } from '../../services/model-parameter-manager/model-parameter-manager.service';
 
 /**
  * Base abstract class for all AI use cases
@@ -65,6 +66,15 @@ export abstract class BaseAIUseCase<
   protected abstract getUserTemplate(): (formattedPrompt: string) => string;
 
   /**
+   * Override model parameters for this specific use case
+   * Override this method in child classes to customize parameters
+   * @returns Parameter overrides to apply to the default model configuration
+   */
+  protected getParameterOverrides(): ModelParameterOverrides {
+    return {}; // Default: no overrides
+  }
+
+  /**
    * Execute the AI use case
    * @param request The request parameters
    * @returns The result of the AI processing
@@ -91,14 +101,29 @@ export abstract class BaseAIUseCase<
     });
 
     try {
+      // Get parameter overrides from the use case
+      const overrides = this.getParameterOverrides();
+      
+      // Get effective parameters by combining config and overrides
+      const effectiveParams = ModelParameterManagerService.getEffectiveParameters(
+        {
+          temperature: this.modelConfig.temperature
+        },
+        overrides
+      );
+      
+      // Validate parameters
+      const validatedParams = ModelParameterManagerService.validateParameters(effectiveParams);
+      
       const result = await ollamaService.callOllamaApiWithSystemMessage(
         formattedUserMessage,
         this.systemMessage,
         {
           model: this.modelConfig.name,
-          temperature: this.modelConfig.temperature,
+          temperature: validatedParams.temperature,
           authToken: this.modelConfig.bearerToken,
           baseUrl: this.modelConfig.baseUrl,
+          ...ModelParameterManagerService.toOllamaOptions(validatedParams),
           debugContext: this.constructor.name
         }
       );
