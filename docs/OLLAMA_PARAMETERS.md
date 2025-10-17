@@ -57,7 +57,9 @@ This guide explains the various parameters available in Ollama for fine-tuning t
 | Parameter | Description | Range | Default |
 |-----------|-------------|-------|---------|
 | `seed` | Random seed for reproducible results. Same seed + same input = same output. | Integer | 0 (random) |
+| `num_predict` | Maximum number of tokens to generate in the response. Controls output length. | 1+ | 128 (model-specific) |
 | `num_ctx` | Context window size in tokens. Larger values allow the model to reference more previous text. | 128 - 4096+ | 2048 |
+| `num_batch` | Number of tokens to process in parallel during generation. Higher values = faster but more memory. | 1 - 512 | 512 (model-specific) |
 
 ---
 

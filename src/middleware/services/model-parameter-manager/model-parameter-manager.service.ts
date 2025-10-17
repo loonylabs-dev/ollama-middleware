@@ -1,29 +1,101 @@
 /**
- * Interface for model parameters used in AI requests
+ * Interface for model parameters used in AI requests.
+ * All parameters are optional except temperature.
  */
 export interface ModelParameters {
+  /** 
+   * Controls randomness in generation (0.0 = deterministic, 2.0 = very random).
+   * - 0.0-0.3: Factual, focused output
+   * - 0.4-0.7: Balanced
+   * - 0.8-1.2: Creative, varied
+   * Range: 0.0-2.0, Default: 0.8
+   */
   temperature: number;
+  
+  /** 
+   * Penalizes token repetition (higher = less repetition).
+   * Range: 0.0-2.0, Default: 1.1
+   */
   repeatPenalty?: number;
+  
+  /** 
+   * Nucleus sampling threshold - limits token selection to cumulative probability.
+   * Range: 0.0-1.0, Default: 0.9
+   */
   topP?: number;
+  
+  /** 
+   * Limits token selection to k most likely tokens.
+   * Range: 1-100, Default: 40
+   */
   topK?: number;
+  
+  /** 
+   * Penalizes tokens proportional to their frequency (reduces overused words).
+   * Range: -2.0-2.0, Default: 0.0
+   */
   frequencyPenalty?: number;
+  
+  /** 
+   * Penalizes all previously used tokens equally (encourages new concepts).
+   * Range: -2.0-2.0, Default: 0.0
+   */
   presencePenalty?: number;
+  
+  /** 
+   * Number of previous tokens to consider for repetition penalty.
+   * Use -1 to consider entire context window (num_ctx).
+   * Range: 0-2048 or -1, Default: 64
+   */
   repeatLastN?: number;
+  
+  /** 
+   * Maximum number of tokens to generate in the response.
+   * Controls output length.
+   * Range: 1+, Default: 128 (model-specific)
+   */
   numPredict?: number;
+  
+  /** 
+   * Context window size in tokens.
+   * Larger values allow model to reference more previous text.
+   * Range: 128-4096+ (model-specific), Default: 2048
+   */
+  numCtx?: number;
+  
+  /** 
+   * Number of tokens to process in parallel during generation.
+   * Higher values = faster but more memory usage.
+   * Range: 1-512, Default: 512 (model-specific)
+   */
+  numBatch?: number;
 }
 
 /**
- * Interface for parameter overrides that can be applied to default model parameters
+ * Interface for parameter overrides that can be applied to default model parameters.
+ * All parameters are optional - only specify what you want to override.
  */
 export interface ModelParameterOverrides {
+  /** Override the base temperature setting */
   temperatureOverride?: number;
+  /** Repeat penalty override */
   repeatPenalty?: number;
+  /** Nucleus sampling (top-p) override */
   topP?: number;
+  /** Top-k sampling override */
   topK?: number;
+  /** Frequency penalty override */
   frequencyPenalty?: number;
+  /** Presence penalty override */
   presencePenalty?: number;
+  /** Repeat last N tokens override */
   repeatLastN?: number;
+  /** Maximum tokens to generate (snake_case for Ollama API compatibility) */
   num_predict?: number;
+  /** Context window size (snake_case for Ollama API compatibility) */
+  num_ctx?: number;
+  /** Batch size for parallel processing (snake_case for Ollama API compatibility) */
+  num_batch?: number;
 }
 
 /**
@@ -60,7 +132,9 @@ export class ModelParameterManagerService {
       frequencyPenalty: overrides.frequencyPenalty,
       presencePenalty: overrides.presencePenalty,
       repeatLastN: overrides.repeatLastN,
-      numPredict: overrides.num_predict
+      numPredict: overrides.num_predict,
+      numCtx: overrides.num_ctx,
+      numBatch: overrides.num_batch
     };
   }
 
@@ -120,6 +194,18 @@ export class ModelParameterManagerService {
       validated.numPredict = Math.round(validated.numPredict);
     }
 
+    // numCtx should be a positive integer (context window size)
+    if (validated.numCtx !== undefined) {
+      if (validated.numCtx < 128) validated.numCtx = 128; // Minimum context
+      validated.numCtx = Math.round(validated.numCtx);
+    }
+
+    // numBatch should be a positive integer (batch size)
+    if (validated.numBatch !== undefined) {
+      if (validated.numBatch < 1) validated.numBatch = 1;
+      validated.numBatch = Math.round(validated.numBatch);
+    }
+
     return validated;
   }
 
@@ -153,6 +239,12 @@ export class ModelParameterManagerService {
     }
     if (parameters.numPredict !== undefined) {
       result.numPredict = parameters.numPredict;
+    }
+    if (parameters.numCtx !== undefined) {
+      result.numCtx = parameters.numCtx;
+    }
+    if (parameters.numBatch !== undefined) {
+      result.numBatch = parameters.numBatch;
     }
 
     return result;
@@ -190,6 +282,12 @@ export class ModelParameterManagerService {
     }
     if (parameters.numPredict !== undefined) {
       options.num_predict = parameters.numPredict;
+    }
+    if (parameters.numCtx !== undefined) {
+      options.num_ctx = parameters.numCtx;
+    }
+    if (parameters.numBatch !== undefined) {
+      options.num_batch = parameters.numBatch;
     }
 
     return options;

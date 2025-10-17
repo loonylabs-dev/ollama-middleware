@@ -4,6 +4,7 @@ import { ResponseProcessorService } from '../../services/response-processor/resp
 import { BaseAIRequest, BaseAIResult } from '../../shared/types/base-request.types';
 import { logger } from '../../shared/utils/logging.utils';
 import { ModelParameterManagerService, ModelParameterOverrides } from '../../services/model-parameter-manager/model-parameter-manager.service';
+import { UseCaseMetricsLoggerService } from '../../services/use-case-metrics-logger/use-case-metrics-logger.service';
 
 /**
  * Base abstract class for all AI use cases
@@ -91,29 +92,35 @@ export abstract class BaseAIUseCase<
     const userTemplate = this.getUserTemplate();
     const formattedUserMessage = userTemplate(formattedPrompt);
     const startTime = Date.now();
+    let success = false;
+    let errorMessage = '';
+    let thinking = '';
 
-    logger.info('AI Use Case execution started', {
-      context: this.constructor.name,
-      metadata: {
-        model: this.modelConfig.name,
-        promptLength: formattedUserMessage.length
-      }
-    });
+    // Get parameter overrides from the use case
+    const overrides = this.getParameterOverrides();
+    
+    // Get effective parameters by combining config and overrides
+    const effectiveParams = ModelParameterManagerService.getEffectiveParameters(
+      {
+        temperature: this.modelConfig.temperature
+      },
+      overrides
+    );
+    
+    // Validate parameters
+    const validatedParams = ModelParameterManagerService.validateParameters(effectiveParams);
+    const definedParams = ModelParameterManagerService.getDefinedParameters(validatedParams);
+
+    // Log the start of execution with metrics
+    UseCaseMetricsLoggerService.logStart(
+      this.constructor.name,
+      this.modelConfig.name,
+      formattedUserMessage.length,
+      validatedParams.temperature,
+      definedParams
+    );
 
     try {
-      // Get parameter overrides from the use case
-      const overrides = this.getParameterOverrides();
-      
-      // Get effective parameters by combining config and overrides
-      const effectiveParams = ModelParameterManagerService.getEffectiveParameters(
-        {
-          temperature: this.modelConfig.temperature
-        },
-        overrides
-      );
-      
-      // Validate parameters
-      const validatedParams = ModelParameterManagerService.validateParameters(effectiveParams);
       
       const result = await ollamaService.callOllamaApiWithSystemMessage(
         formattedUserMessage,
@@ -136,31 +143,45 @@ export abstract class BaseAIUseCase<
       const { cleanedJson: processedContent, thinking: extractedThinking } = 
         ResponseProcessorService.processResponse(result.message.content);
       
-      const duration = Date.now() - startTime;
+      thinking = extractedThinking;
+      success = true;
 
-      logger.info('AI Use Case execution completed', {
-        context: this.constructor.name,
-        metadata: {
-          duration,
-          model: this.modelConfig.name,
-          hasThinking: !!extractedThinking
-        }
-      });
+      // Calculate and log metrics
+      const metrics = UseCaseMetricsLoggerService.calculateMetrics(
+        startTime,
+        this.systemMessage,
+        formattedUserMessage,
+        result.message.content,
+        thinking,
+        this.modelConfig.name,
+        success,
+        errorMessage,
+        definedParams
+      );
+
+      // Log completion with metrics
+      UseCaseMetricsLoggerService.logCompletion(this.constructor.name, metrics);
 
       // Create and return the result
       return this.createResult(processedContent, formattedUserMessage, extractedThinking);
     } catch (error) {
-      const duration = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-      logger.error('AI Use Case execution failed', {
-        context: this.constructor.name,
-        error: errorMessage,
-        metadata: {
-          duration,
-          model: this.modelConfig.name
-        }
-      });
+      // Calculate metrics for failed execution
+      const metrics = UseCaseMetricsLoggerService.calculateMetrics(
+        startTime,
+        this.systemMessage,
+        formattedUserMessage,
+        '',
+        thinking,
+        this.modelConfig.name,
+        false,
+        errorMessage,
+        definedParams
+      );
+
+      // Log completion with error
+      UseCaseMetricsLoggerService.logCompletion(this.constructor.name, metrics);
 
       throw error;
     }
