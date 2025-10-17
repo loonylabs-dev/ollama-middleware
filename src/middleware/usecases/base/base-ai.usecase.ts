@@ -1,14 +1,23 @@
 import { ollamaService } from '../../services/ollama/ollama.service';
-import { getModelConfig, ModelConfigKey, OllamaModelConfig } from '../../shared/config/models.config';
+import { getModelConfig, ModelConfigKey, ValidatedOllamaModelConfig } from '../../shared/config/models.config';
 import { ResponseProcessorService } from '../../services/response-processor/response-processor.service';
 import { BaseAIRequest, BaseAIResult } from '../../shared/types/base-request.types';
 import { logger } from '../../shared/utils/logging.utils';
+import { ModelParameterManagerService, ModelParameterOverrides } from '../../services/model-parameter-manager/model-parameter-manager.service';
+import { UseCaseMetricsLoggerService } from '../../services/use-case-metrics-logger/use-case-metrics-logger.service';
 
 /**
  * Base abstract class for all AI use cases
  * Provides common functionality and enforces configuration for each use case
+ * TPrompt: The type of prompt data (string, object, etc.)
+ * TRequest: The request type (must extend BaseAIRequest<TPrompt>)
+ * TResult: The result type (must extend BaseAIResult)
  */
-export abstract class BaseAIUseCase<TRequest extends BaseAIRequest, TResult extends BaseAIResult> {
+export abstract class BaseAIUseCase<
+  TPrompt = string,
+  TRequest extends BaseAIRequest<TPrompt> = BaseAIRequest<TPrompt>, 
+  TResult extends BaseAIResult = BaseAIResult
+> {
   /**
    * The system message defines the behavior and instructions for the AI model
    * Must be defined by each specific use case
@@ -31,8 +40,9 @@ export abstract class BaseAIUseCase<TRequest extends BaseAIRequest, TResult exte
 
   /**
    * Get the model configuration for this use case
+   * Returns validated config with guaranteed model name
    */
-  protected get modelConfig(): OllamaModelConfig {
+  protected get modelConfig(): ValidatedOllamaModelConfig {
     return getModelConfig(this.modelConfigKey);
   }
 
@@ -50,10 +60,20 @@ export abstract class BaseAIUseCase<TRequest extends BaseAIRequest, TResult exte
   }
 
   /**
-   * Abstract method that each use case can implement
+   * Abstract method that each use case MUST implement
    * Returns the specific template function for the use case
+   * This enforces the message pattern: each use case should have a corresponding message file
    */
-  protected getUserTemplate?(): (formattedPrompt: string) => string;
+  protected abstract getUserTemplate(): (formattedPrompt: string) => string;
+
+  /**
+   * Override model parameters for this specific use case
+   * Override this method in child classes to customize parameters
+   * @returns Parameter overrides to apply to the default model configuration
+   */
+  protected getParameterOverrides(): ModelParameterOverrides {
+    return {}; // Default: no overrides
+  }
 
   /**
    * Execute the AI use case
@@ -65,26 +85,52 @@ export abstract class BaseAIUseCase<TRequest extends BaseAIRequest, TResult exte
       throw new Error('Valid prompt must be provided');
     }
 
-    const formattedUserMessage = this.formatUserMessage(request.prompt);
+    // Format the raw prompt using formatUserMessage
+    const formattedPrompt = this.formatUserMessage(request.prompt);
+    
+    // Apply the user template to create the final message
+    const userTemplate = this.getUserTemplate();
+    const formattedUserMessage = userTemplate(formattedPrompt);
     const startTime = Date.now();
+    let success = false;
+    let errorMessage = '';
+    let thinking = '';
 
-    logger.info('AI Use Case execution started', {
-      context: this.constructor.name,
-      metadata: {
-        model: this.modelConfig.name,
-        promptLength: formattedUserMessage.length
-      }
-    });
+    // Get parameter overrides from the use case
+    const overrides = this.getParameterOverrides();
+    
+    // Get effective parameters by combining config and overrides
+    const effectiveParams = ModelParameterManagerService.getEffectiveParameters(
+      {
+        temperature: this.modelConfig.temperature
+      },
+      overrides
+    );
+    
+    // Validate parameters
+    const validatedParams = ModelParameterManagerService.validateParameters(effectiveParams);
+    const definedParams = ModelParameterManagerService.getDefinedParameters(validatedParams);
+
+    // Log the start of execution with metrics
+    UseCaseMetricsLoggerService.logStart(
+      this.constructor.name,
+      this.modelConfig.name,
+      formattedUserMessage.length,
+      validatedParams.temperature,
+      definedParams
+    );
 
     try {
+      
       const result = await ollamaService.callOllamaApiWithSystemMessage(
         formattedUserMessage,
         this.systemMessage,
         {
           model: this.modelConfig.name,
-          temperature: this.modelConfig.temperature,
+          temperature: validatedParams.temperature,
           authToken: this.modelConfig.bearerToken,
           baseUrl: this.modelConfig.baseUrl,
+          ...ModelParameterManagerService.toOllamaOptions(validatedParams),
           debugContext: this.constructor.name
         }
       );
@@ -97,31 +143,45 @@ export abstract class BaseAIUseCase<TRequest extends BaseAIRequest, TResult exte
       const { cleanedJson: processedContent, thinking: extractedThinking } = 
         ResponseProcessorService.processResponse(result.message.content);
       
-      const duration = Date.now() - startTime;
+      thinking = extractedThinking;
+      success = true;
 
-      logger.info('AI Use Case execution completed', {
-        context: this.constructor.name,
-        metadata: {
-          duration,
-          model: this.modelConfig.name,
-          hasThinking: !!extractedThinking
-        }
-      });
+      // Calculate and log metrics
+      const metrics = UseCaseMetricsLoggerService.calculateMetrics(
+        startTime,
+        this.systemMessage,
+        formattedUserMessage,
+        result.message.content,
+        thinking,
+        this.modelConfig.name,
+        success,
+        errorMessage,
+        definedParams
+      );
+
+      // Log completion with metrics
+      UseCaseMetricsLoggerService.logCompletion(this.constructor.name, metrics);
 
       // Create and return the result
       return this.createResult(processedContent, formattedUserMessage, extractedThinking);
     } catch (error) {
-      const duration = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-      logger.error('AI Use Case execution failed', {
-        context: this.constructor.name,
-        error: errorMessage,
-        metadata: {
-          duration,
-          model: this.modelConfig.name
-        }
-      });
+      // Calculate metrics for failed execution
+      const metrics = UseCaseMetricsLoggerService.calculateMetrics(
+        startTime,
+        this.systemMessage,
+        formattedUserMessage,
+        '',
+        thinking,
+        this.modelConfig.name,
+        false,
+        errorMessage,
+        definedParams
+      );
+
+      // Log completion with error
+      UseCaseMetricsLoggerService.logCompletion(this.constructor.name, metrics);
 
       throw error;
     }

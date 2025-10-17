@@ -1,27 +1,101 @@
 /**
- * Interface for model parameters used in AI requests
+ * Interface for model parameters used in AI requests.
+ * All parameters are optional except temperature.
  */
 export interface ModelParameters {
+  /** 
+   * Controls randomness in generation (0.0 = deterministic, 2.0 = very random).
+   * - 0.0-0.3: Factual, focused output
+   * - 0.4-0.7: Balanced
+   * - 0.8-1.2: Creative, varied
+   * Range: 0.0-2.0, Default: 0.8
+   */
   temperature: number;
+  
+  /** 
+   * Penalizes token repetition (higher = less repetition).
+   * Range: 0.0-2.0, Default: 1.1
+   */
   repeatPenalty?: number;
+  
+  /** 
+   * Nucleus sampling threshold - limits token selection to cumulative probability.
+   * Range: 0.0-1.0, Default: 0.9
+   */
   topP?: number;
+  
+  /** 
+   * Limits token selection to k most likely tokens.
+   * Range: 1-100, Default: 40
+   */
   topK?: number;
+  
+  /** 
+   * Penalizes tokens proportional to their frequency (reduces overused words).
+   * Range: -2.0-2.0, Default: 0.0
+   */
   frequencyPenalty?: number;
+  
+  /** 
+   * Penalizes all previously used tokens equally (encourages new concepts).
+   * Range: -2.0-2.0, Default: 0.0
+   */
   presencePenalty?: number;
+  
+  /** 
+   * Number of previous tokens to consider for repetition penalty.
+   * Use -1 to consider entire context window (num_ctx).
+   * Range: 0-2048 or -1, Default: 64
+   */
   repeatLastN?: number;
+  
+  /** 
+   * Maximum number of tokens to generate in the response.
+   * Controls output length.
+   * Range: 1+, Default: 128 (model-specific)
+   */
+  numPredict?: number;
+  
+  /** 
+   * Context window size in tokens.
+   * Larger values allow model to reference more previous text.
+   * Range: 128-4096+ (model-specific), Default: 2048
+   */
+  numCtx?: number;
+  
+  /** 
+   * Number of tokens to process in parallel during generation.
+   * Higher values = faster but more memory usage.
+   * Range: 1-512, Default: 512 (model-specific)
+   */
+  numBatch?: number;
 }
 
 /**
- * Interface for parameter overrides that can be applied to default model parameters
+ * Interface for parameter overrides that can be applied to default model parameters.
+ * All parameters are optional - only specify what you want to override.
  */
 export interface ModelParameterOverrides {
+  /** Override the base temperature setting */
   temperatureOverride?: number;
+  /** Repeat penalty override */
   repeatPenalty?: number;
+  /** Nucleus sampling (top-p) override */
   topP?: number;
+  /** Top-k sampling override */
   topK?: number;
+  /** Frequency penalty override */
   frequencyPenalty?: number;
+  /** Presence penalty override */
   presencePenalty?: number;
+  /** Repeat last N tokens override */
   repeatLastN?: number;
+  /** Maximum tokens to generate (snake_case for Ollama API compatibility) */
+  num_predict?: number;
+  /** Context window size (snake_case for Ollama API compatibility) */
+  num_ctx?: number;
+  /** Batch size for parallel processing (snake_case for Ollama API compatibility) */
+  num_batch?: number;
 }
 
 /**
@@ -57,7 +131,10 @@ export class ModelParameterManagerService {
       topK: overrides.topK,
       frequencyPenalty: overrides.frequencyPenalty,
       presencePenalty: overrides.presencePenalty,
-      repeatLastN: overrides.repeatLastN
+      repeatLastN: overrides.repeatLastN,
+      numPredict: overrides.num_predict,
+      numCtx: overrides.num_ctx,
+      numBatch: overrides.num_batch
     };
   }
 
@@ -111,6 +188,24 @@ export class ModelParameterManagerService {
       }
     }
 
+    // numPredict should be a positive integer (max tokens to generate)
+    if (validated.numPredict !== undefined) {
+      if (validated.numPredict < 1) validated.numPredict = 1;
+      validated.numPredict = Math.round(validated.numPredict);
+    }
+
+    // numCtx should be a positive integer (context window size)
+    if (validated.numCtx !== undefined) {
+      if (validated.numCtx < 128) validated.numCtx = 128; // Minimum context
+      validated.numCtx = Math.round(validated.numCtx);
+    }
+
+    // numBatch should be a positive integer (batch size)
+    if (validated.numBatch !== undefined) {
+      if (validated.numBatch < 1) validated.numBatch = 1;
+      validated.numBatch = Math.round(validated.numBatch);
+    }
+
     return validated;
   }
 
@@ -141,6 +236,15 @@ export class ModelParameterManagerService {
     }
     if (parameters.repeatLastN !== undefined) {
       result.repeatLastN = parameters.repeatLastN;
+    }
+    if (parameters.numPredict !== undefined) {
+      result.numPredict = parameters.numPredict;
+    }
+    if (parameters.numCtx !== undefined) {
+      result.numCtx = parameters.numCtx;
+    }
+    if (parameters.numBatch !== undefined) {
+      result.numBatch = parameters.numBatch;
     }
 
     return result;
@@ -176,29 +280,128 @@ export class ModelParameterManagerService {
     if (parameters.repeatLastN !== undefined) {
       options.repeat_last_n = parameters.repeatLastN;
     }
+    if (parameters.numPredict !== undefined) {
+      options.num_predict = parameters.numPredict;
+    }
+    if (parameters.numCtx !== undefined) {
+      options.num_ctx = parameters.numCtx;
+    }
+    if (parameters.numBatch !== undefined) {
+      options.num_batch = parameters.numBatch;
+    }
 
     return options;
   }
 
   /**
    * Create default parameters for a given model type or use case
-   * @param modelType The type of model (e.g., 'creative', 'analytical', 'balanced')
+   * 
+   * Available presets:
+   * - 'creative' / 'creative_writing': Optimized for novels, stories, narrative fiction
+   * - 'factual': Optimized for reports, documentation, journalism
+   * - 'poetic': Optimized for poetry, lyrics, artistic expression
+   * - 'dialogue': Optimized for character dialogue, conversational content
+   * - 'technical': Optimized for code documentation, technical guides
+   * - 'marketing': Optimized for advertisements, promotional content
+   * - 'analytical': General analytical tasks (legacy)
+   * - 'balanced': General balanced approach (default)
+   * 
+   * @param modelType The type of model or use case
    * @returns Default parameters for the model type
+   * 
+   * For detailed documentation about each preset, see docs/OLLAMA_PARAMETERS.md
    */
   public static getDefaultParametersForType(modelType: string): ModelParameters {
     switch (modelType.toLowerCase()) {
+      // Creative Writing preset - for novels, stories, narrative fiction
       case 'creative':
+      case 'creative_writing':
+        return {
+          temperature: 0.8,
+          repeatPenalty: 1.3,
+          frequencyPenalty: 0.2,
+          presencePenalty: 0.2,
+          topP: 0.92,
+          topK: 60,
+          repeatLastN: 128
+        };
+      
+      // Factual Content preset - for reports, documentation, journalism
+      case 'factual':
+        return {
+          temperature: 0.4,
+          repeatPenalty: 1.2,
+          frequencyPenalty: 0.1,
+          presencePenalty: 0.1,
+          topP: 0.85,
+          topK: 40,
+          repeatLastN: 96
+        };
+      
+      // Poetic Text preset - for poetry, lyrics, artistic expression
+      case 'poetic':
+      case 'poetry':
         return {
           temperature: 1.0,
+          repeatPenalty: 1.2,
+          frequencyPenalty: 0.3,
+          presencePenalty: 0.2,
           topP: 0.95,
-          repeatPenalty: 1.1
+          topK: 80,
+          repeatLastN: 64
         };
+      
+      // Dialogue & Conversation preset - for character dialogue, chat
+      case 'dialogue':
+      case 'conversation':
+      case 'conversational':
+        return {
+          temperature: 0.7,
+          repeatPenalty: 1.1,
+          frequencyPenalty: 0.3,
+          presencePenalty: 0.0,
+          topP: 0.9,
+          topK: 50,
+          repeatLastN: 32
+        };
+      
+      // Technical Documentation preset - for code docs, API references
+      case 'technical':
+      case 'tech':
+      case 'documentation':
+        return {
+          temperature: 0.3,
+          repeatPenalty: 1.05,
+          frequencyPenalty: 0.0,
+          presencePenalty: 0.1,
+          topP: 0.8,
+          topK: 30,
+          repeatLastN: 128
+        };
+      
+      // Marketing Copy preset - for ads, sales copy, promotional content
+      case 'marketing':
+      case 'advertising':
+      case 'promotional':
+        return {
+          temperature: 0.7,
+          repeatPenalty: 1.3,
+          frequencyPenalty: 0.4,
+          presencePenalty: 0.3,
+          topP: 0.9,
+          topK: 60,
+          repeatLastN: 96
+        };
+      
+      // Legacy presets for backward compatibility
       case 'analytical':
         return {
           temperature: 0.3,
           topP: 0.8,
           repeatPenalty: 1.05
         };
+      
+      // Balanced preset (default)
       case 'balanced':
       default:
         return {

@@ -14,6 +14,7 @@ export interface OllamaDebugInfo {
   response?: string;
   thinking?: string;
   responseTimestamp?: Date;
+  rawResponseData?: any;
   error?: {
     message: string;
     details?: any;
@@ -159,6 +160,26 @@ export class OllamaDebugger {
         console.log('-'.repeat(50));
         console.log(this.formatMessage(debugInfo.thinking));
       }
+
+      // Show key metrics from raw response data
+      if (debugInfo.rawResponseData) {
+        console.log('\n⏱️  RESPONSE METRICS:');
+        console.log('-'.repeat(50));
+        if (debugInfo.rawResponseData.eval_count !== undefined) {
+          console.log(`Tokens generated: ${debugInfo.rawResponseData.eval_count}`);
+        }
+        if (debugInfo.rawResponseData.prompt_eval_count !== undefined) {
+          console.log(`Prompt tokens: ${debugInfo.rawResponseData.prompt_eval_count}`);
+        }
+        if (debugInfo.rawResponseData.total_duration !== undefined) {
+          const seconds = (debugInfo.rawResponseData.total_duration / 1e9).toFixed(2);
+          console.log(`Total duration: ${seconds}s`);
+        }
+        if (debugInfo.rawResponseData.eval_duration !== undefined) {
+          const evalSeconds = (debugInfo.rawResponseData.eval_duration / 1e9).toFixed(2);
+          console.log(`Generation duration: ${evalSeconds}s`);
+        }
+      }
     }
     
     if (debugInfo.error) {
@@ -252,6 +273,12 @@ ${JSON.stringify(debugInfo.requestData, null, 2)}
 ${debugInfo.response ? `## Response
 \`\`\`
 ${debugInfo.response}
+\`\`\`
+` : ''}
+
+${debugInfo.rawResponseData ? `## Complete Response Data
+\`\`\`json
+${JSON.stringify(debugInfo.rawResponseData, null, 2)}
 \`\`\`
 ` : ''}
 

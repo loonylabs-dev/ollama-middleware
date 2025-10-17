@@ -40,7 +40,7 @@
 
 - 🏗️ **Clean Architecture**: Base classes and interfaces for scalable AI applications
 - 🤖 **Ollama Integration**: Complete service layer with retry logic and authentication
-- 🧹 **JSON Cleaning**: Advanced JSON repair and validation system
+- 🧹 **JSON Cleaning**: Recipe-based JSON repair system with automatic strategy selection
 - 🎨 **FlatFormatter System**: Advanced data formatting for LLM consumption
 - 📊 **Comprehensive Logging**: Multi-level logging with metadata support
 - ⚙️ **Configuration Management**: Flexible model and application configuration
@@ -56,13 +56,13 @@
 Install directly from GitHub:
 
 ```bash
-npm install git+https://github.com/planichttm/ollama-middleware.git
+npm install git+https://github.com/loonylabs-dev/ollama-middleware.git
 ```
 
 Or using a specific version/tag:
 
 ```bash
-npm install git+https://github.com/planichttm/ollama-middleware.git#v1.0.0
+npm install git+https://github.com/loonylabs-dev/ollama-middleware.git#v1.0.0
 ```
 
 ### Basic Usage
@@ -71,7 +71,7 @@ npm install git+https://github.com/planichttm/ollama-middleware.git#v1.0.0
 import { BaseAIUseCase, BaseAIRequest, BaseAIResult } from 'ollama-middleware';
 
 // Define your request/response interfaces
-interface MyRequest extends BaseAIRequest {
+interface MyRequest extends BaseAIRequest<string> {
   message: string;
 }
 
@@ -80,11 +80,16 @@ interface MyResult extends BaseAIResult {
 }
 
 // Create your use case
-class MyChatUseCase extends BaseAIUseCase<MyRequest, MyResult> {
+class MyChatUseCase extends BaseAIUseCase<string, MyRequest, MyResult> {
   protected readonly systemMessage = "You are a helpful assistant.";
   
+  // Required: return user message template function
+  protected getUserTemplate(): (formattedPrompt: string) => string {
+    return (message) => message;
+  }
+  
   protected formatUserMessage(prompt: any): string {
-    return prompt.message;
+    return typeof prompt === 'string' ? prompt : prompt.message;
   }
   
   protected createResult(content: string, usedPrompt: string, thinking?: string): MyResult {
@@ -100,57 +105,56 @@ class MyChatUseCase extends BaseAIUseCase<MyRequest, MyResult> {
 ```
 
 <details>
-<summary><strong>🎭 Advanced Character Generation Example</strong></summary>
+<summary><strong>🎭 Advanced Example with FlatFormatter</strong></summary>
 
 ```typescript
 import { 
   FlatFormatter, 
-  LLMContextBuilder,
-  characterPreset,
-  genrePreset,
-  settingPreset 
+  personPreset
 } from 'ollama-middleware';
 
-class CharacterGeneratorUseCase {
-  protected readonly systemMessage = `You are an expert character creator.
+class ProfileGeneratorUseCase extends BaseAIUseCase {
+  protected readonly systemMessage = `You are a professional profile creator.
   
 IMPORTANT: Respond with ONLY valid JSON following this schema:
 {
-  "Name": "Character name",
-  "Age": "Character age", 
-  "Description": "Brief character overview",
-  "Personality": "Core personality traits",
-  "Background": "Character history",
-  "Goals": "What they want to achieve",
-  "Conflicts": "Internal and external conflicts"
+  "name": "Person name",
+  "title": "Professional title", 
+  "summary": "Brief professional overview",
+  "skills": "Key skills and expertise",
+  "achievements": "Notable accomplishments"
 }`;
 
   // Use FlatFormatter and presets for rich context building
   protected formatUserMessage(prompt: any): string {
-    const { role, setting, genre, constraints } = prompt;
+    const { person, preferences, guidelines } = prompt;
     
     const contextSections = [
-      `## CHARACTER ROLE: ${role}`,
-      settingPreset.formatForLLM(setting, "## STORY SETTING:"),
-      genrePreset.formatForLLM(genre, "## GENRE REQUIREMENTS:"),
+      // Use preset for structured data
+      personPreset.formatForLLM(person, "## PERSON INFO:"),
       
-      // Format constraints with FlatFormatter
-      FlatFormatter.flatten(
-        constraints.map(constraint => ({ 
-          constraint: constraint,
+      // Use FlatFormatter for custom structures
+      `## PREFERENCES:\n${FlatFormatter.flatten(preferences, {
+        format: 'bulleted',
+        keyValueSeparator: ': '
+      })}`,
+      
+      // Format guidelines with FlatFormatter
+      `## GUIDELINES:\n${FlatFormatter.flatten(
+        guidelines.map(g => ({ 
+          guideline: g,
           priority: "MUST FOLLOW" 
         })),
         {
           format: 'numbered',
-          entryTitleKey: 'constraint',
-          ignoredKeys: ['constraint']
+          entryTitleKey: 'guideline',
+          ignoredKeys: ['guideline']
         }
-      )
+      )}`
     ];
     
     return contextSections.join('\n\n');
   }
-}
   
   protected createResult(content: string, usedPrompt: string, thinking?: string): MyResult {
     return {
@@ -158,15 +162,19 @@ IMPORTANT: Respond with ONLY valid JSON following this schema:
       model: this.modelConfig.name,
       usedPrompt,
       thinking,
-      response: content
+      profile: JSON.parse(content)
     };
   }
 }
 
 // Use it
-const chatUseCase = new MyChatUseCase();
-const result = await chatUseCase.execute({ 
-  prompt: { message: "Hello!" },
+const profileGen = new ProfileGeneratorUseCase();
+const result = await profileGen.execute({ 
+  prompt: { 
+    person: { name: "Alice", occupation: "Engineer" },
+    preferences: { tone: "professional", length: "concise" },
+    guidelines: ["Highlight technical skills", "Include leadership"]
+  },
   authToken: "optional-token"
 });
 ```
@@ -199,10 +207,10 @@ NODE_ENV=development
 # Logging
 LOG_LEVEL=info
 
-# Ollama Model Configuration
-MODEL1_URL=http://localhost:11434
-MODEL1_NAME=mistral:latest
-MODEL1_TOKEN=optional-auth-token
+# Ollama Model Configuration (REQUIRED)
+MODEL1_NAME=phi3:mini              # Required: Your model name
+MODEL1_URL=http://localhost:11434  # Optional: Defaults to localhost
+MODEL1_TOKEN=optional-auth-token   # Optional: For authenticated servers
 ```
 
 </details>
@@ -232,8 +240,12 @@ src/
 
 - [Getting Started Guide](docs/GETTING_STARTED.md)
 - [Architecture Overview](docs/ARCHITECTURE.md)
+- [Ollama Parameters Guide](docs/OLLAMA_PARAMETERS.md) - Complete parameter reference and presets
+- [Request Formatting Guide](docs/REQUEST_FORMATTING.md) - FlatFormatter vs RequestFormatterService
+- [Performance Monitoring](docs/PERFORMANCE_MONITORING.md) - Metrics and logging
 - [API Reference](docs/API_REFERENCE.md)
 - [Examples](docs/EXAMPLES.md)
+- [CHANGELOG](CHANGELOG.md) - Release notes and breaking changes
 
 ## 🧪 Testing and Examples
 
@@ -256,6 +268,9 @@ node test-robustness.js
 
 # Test FlatFormatter system
 node test-flat-formatter.js
+
+# Test parameter limits and token control
+node tests/integration/test-parameter-limits.js
 ```
 
 <details>
@@ -266,6 +281,60 @@ node test-flat-formatter.js
 - ✅ **JSON Robustness**: 80% success rate on malformed JSON repair
 - ✅ **Error Handling**: 100% graceful handling of extreme scenarios
 - ✅ **Performance**: Large JSON processing at 1.1M chars/second
+- ✅ **Parameter Limits**: Token limiting successfully controls output length
+
+</details>
+
+### 🐦 Tweet Generator Example
+
+<details>
+<summary><strong>💬 Demonstrating Token Limiting with Social Media Content</strong></summary>
+
+The **Tweet Generator** example showcases parameter configuration for controlling output length:
+
+```typescript
+import { TweetGeneratorUseCase } from 'ollama-middleware';
+
+const tweetGenerator = new TweetGeneratorUseCase();
+
+const result = await tweetGenerator.execute({
+  prompt: 'The importance of clean code in software development'
+});
+
+console.log(result.tweet);          // Generated tweet
+console.log(result.characterCount); // Character count
+console.log(result.withinLimit);    // true if ≤ 280 chars
+```
+
+**Key Features:**
+- 🎯 **Token Limiting**: Uses `num_predict: 70` to limit output to ~280 characters
+- 📊 **Character Validation**: Automatically checks if output is within Twitter's limit
+- 🎨 **Marketing Preset**: Optimized parameters for engaging, concise content
+- ✅ **Testable**: Integration test verifies parameter effectiveness
+
+**Parameter Configuration:**
+```typescript
+protected getParameterOverrides(): ModelParameterOverrides {
+  return {
+    num_predict: 70,        // Limit to ~280 characters
+    temperatureOverride: 0.7,
+    repeatPenalty: 1.3,
+    frequencyPenalty: 0.3,
+    presencePenalty: 0.2,
+    topP: 0.9,
+    topK: 50,
+    repeatLastN: 32
+  };
+}
+```
+
+This example demonstrates:
+- How to configure parameters for specific output requirements
+- Token limiting as a practical use case
+- Validation and testing of parameter effectiveness
+- Real-world application (social media content generation)
+
+See `src/examples/tweet-generator/` for full implementation.
 
 </details>
 
@@ -278,7 +347,7 @@ Run the included examples:
 
 ```bash
 # Clone the repository
-git clone https://github.com/planichttm/ollama-middleware.git
+git clone https://github.com/loonylabs-dev/ollama-middleware.git
 cd ollama-middleware
 
 # Install dependencies
@@ -306,17 +375,95 @@ curl -X POST http://localhost:3000/api/chat \
 ## 🔧 Advanced Features
 
 <details>
-<summary><strong>🧹 JSON Cleaning System</strong></summary>
+<summary><strong>🧹 Recipe-Based JSON Cleaning System</strong></summary>
 
-Automatically repair malformed JSON responses from AI models:
+Advanced JSON repair with automatic strategy selection and modular operations:
 
 ```typescript
-import { JsonCleanerService } from 'ollama-middleware';
+import { JsonCleanerService, JsonCleanerFactory } from 'ollama-middleware';
 
-const malformedJson = '{"key": "value",}'; // trailing comma
+// Simple usage (async - uses new recipe system with fallback)
+const result = await JsonCleanerService.processResponseAsync(malformedJson);
+console.log(result.cleanedJson);
+
+// Legacy sync method (still works)
 const cleaned = JsonCleanerService.processResponse(malformedJson);
-console.log(cleaned.cleanedJson); // {"key": "value"}
+
+// Advanced: Quick clean with automatic recipe selection
+const result = await JsonCleanerFactory.quickClean(malformedJson);
+console.log('Success:', result.success);
+console.log('Confidence:', result.confidence);
+console.log('Changes:', result.totalChanges);
 ```
+
+**Features:**
+- 🎯 Automatic strategy selection (Conservative/Aggressive/Adaptive)
+- 🔧 Modular detectors & fixers for specific problems
+- ✨ Extracts JSON from Markdown/Think-Tags
+- 🔄 Checkpoint/Rollback support for safe repairs
+- 📊 Detailed metrics (confidence, quality, performance)
+- 🛡️ Fallback to legacy system for compatibility
+
+**Available Templates:**
+```typescript
+import { RecipeTemplates } from 'ollama-middleware';
+
+const conservativeRecipe = RecipeTemplates.conservative();
+const aggressiveRecipe = RecipeTemplates.aggressive();
+const adaptiveRecipe = RecipeTemplates.adaptive();
+```
+
+See [Recipe System Documentation](src/middleware/services/json-cleaner/recipe-system/README.md) for details.
+
+</details>
+
+<details>
+<summary><strong>📝 Request Formatting (FlatFormatter & RequestFormatterService)</strong></summary>
+
+**For simple data:** Use [FlatFormatter](src/middleware/services/flat-formatter/README.md)
+```typescript
+const flat = FlatFormatter.flatten({ name: 'Alice', age: 30 });
+```
+
+**For complex nested prompts:** Use RequestFormatterService
+```typescript
+import { RequestFormatterService } from 'ollama-middleware';
+
+const prompt = {
+  context: { genre: 'sci-fi', tone: 'dark' },
+  instruction: 'Write an opening'
+};
+
+const formatted = RequestFormatterService.formatUserMessage(
+  prompt, (s) => s, 'MyUseCase'
+);
+// Outputs: ## CONTEXT:\ngenre: sci-fi\ntone: dark\n\n## INSTRUCTION:\nWrite an opening
+```
+
+See [Request Formatting Guide](docs/REQUEST_FORMATTING.md) for details.
+
+</details>
+
+<details>
+<summary><strong>📊 Performance Monitoring & Metrics</strong></summary>
+
+Automatic performance tracking with `UseCaseMetricsLoggerService`:
+
+```typescript
+// Automatically logged for all use cases:
+// - Execution time
+// - Token usage (input/output)
+// - Generation speed (tokens/sec)
+// - Parameters used
+```
+
+Metrics appear in console logs:
+```
+✅ Completed AI use case [MyUseCase = phi3:mini] SUCCESS
+   Time: 2.5s | Input: 120 tokens | Output: 85 tokens | Speed: 34.0 tokens/sec
+```
+
+See [Performance Monitoring Guide](docs/PERFORMANCE_MONITORING.md) for advanced usage.
 
 </details>
 
@@ -344,10 +491,66 @@ Flexible model management:
 ```typescript
 import { getModelConfig } from 'ollama-middleware';
 
+// MODEL1_NAME is required in .env or will throw error
 const config = getModelConfig('MODEL1');
-console.log(config.name);     // mistral:latest
-console.log(config.baseUrl);  // http://localhost:11434
+console.log(config.name);     // Value from MODEL1_NAME env variable
+console.log(config.baseUrl);  // Value from MODEL1_URL or default localhost
 ```
+
+</details>
+
+<details>
+<summary><strong>🎛️ Parameter Configuration</strong></summary>
+
+Ollama-middleware provides fine-grained control over model parameters to optimize output for different use cases:
+
+```typescript
+import { BaseAIUseCase, ModelParameterOverrides } from 'ollama-middleware';
+
+class MyUseCase extends BaseAIUseCase<MyRequest, MyResult> {
+  protected getParameterOverrides(): ModelParameterOverrides {
+    return {
+      temperatureOverride: 0.8,      // Control creativity vs. determinism
+      repeatPenalty: 1.3,             // Reduce word repetition
+      frequencyPenalty: 0.2,          // Penalize frequent words
+      presencePenalty: 0.2,           // Encourage topic diversity
+      topP: 0.92,                     // Nucleus sampling threshold
+      topK: 60,                       // Vocabulary selection limit
+      repeatLastN: 128                // Context window for repetition
+    };
+  }
+}
+```
+
+**Parameter Levels:**
+- **Global defaults**: Set in `ModelParameterManagerService`
+- **Use-case level**: Override via `getParameterOverrides()` method
+- **Request level**: Pass parameters directly in requests
+
+**Available Presets:**
+
+```typescript
+import { ModelParameterManagerService } from 'ollama-middleware';
+
+// Use curated presets for common use cases
+const creativeParams = ModelParameterManagerService.getDefaultParametersForType('creative_writing');
+const factualParams = ModelParameterManagerService.getDefaultParametersForType('factual');
+const poeticParams = ModelParameterManagerService.getDefaultParametersForType('poetic');
+const dialogueParams = ModelParameterManagerService.getDefaultParametersForType('dialogue');
+const technicalParams = ModelParameterManagerService.getDefaultParametersForType('technical');
+const marketingParams = ModelParameterManagerService.getDefaultParametersForType('marketing');
+```
+
+**Presets Include:**
+- 📚 **Creative Writing**: Novels, stories, narrative fiction
+- 📊 **Factual**: Reports, documentation, journalism
+- 🎭 **Poetic**: Poetry, lyrics, artistic expression
+- 💬 **Dialogue**: Character dialogue, conversational content
+- 🔧 **Technical**: Code documentation, API references
+- 📢 **Marketing**: Advertisements, promotional content
+
+For detailed documentation about all parameters, value ranges, and preset configurations, see:
+**[Ollama Parameters Guide](./docs/OLLAMA_PARAMETERS.md)**
 
 </details>
 
@@ -372,8 +575,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Links
 
-- [📚 Documentation](https://github.com/planichttm/ollama-middleware/docs)
-- [🐛 Issues](https://github.com/planichttm/ollama-middleware/issues)
+- [📚 Documentation](https://github.com/loonylabs-dev/ollama-middleware/docs)
+- [🐛 Issues](https://github.com/loonylabs-dev/ollama-middleware/issues)
 - [📦 NPM Package](https://www.npmjs.com/package/ollama-middleware)
 
 ---
@@ -382,7 +585,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Made with ❤️ for the AI community**
 
-[![GitHub stars](https://img.shields.io/github/stars/planichttm/ollama-middleware?style=social)](https://github.com/planichttm/ollama-middleware/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/planichttm/ollama-middleware?style=social)](https://github.com/loonylabs-dev/ollama-middleware/stargazers)
 [![Follow on GitHub](https://img.shields.io/github/followers/planichttm?style=social&label=Follow)](https://github.com/planichttm)
 
 </div>

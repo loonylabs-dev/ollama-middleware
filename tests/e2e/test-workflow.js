@@ -1,15 +1,19 @@
 // Comprehensive End-to-End workflow test for Ollama Middleware
 const { CharacterGeneratorUseCase } = require('../../dist/examples/character-generator/character-generator.usecase');
 const { OllamaService } = require('../../dist/middleware/services');
+const { getModelConfig } = require('../../dist/middleware/shared/config/models.config');
 
 console.log('🚀 Starting End-to-End Workflow Test...\n');
 console.log('This test validates the complete pipeline:');
 console.log('Request → UseCase → FlatFormatter → Ollama → JSON Cleaning → Parsed Result\n');
 
+// Get MODEL1 configuration
+const modelConfig = getModelConfig('MODEL1');
+
 // Test configuration
 const TEST_CONFIG = {
-  model: 'mistral-20k:latest', // Adjust based on your available models
-  timeout: 60000,       // 60 second timeout
+  model: modelConfig.name, // Use MODEL1 from config
+  timeout: 60000,          // 60 second timeout
   retries: 2
 };
 

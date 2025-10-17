@@ -1,201 +1,403 @@
 # FlatFormatter System
 
-A powerful utility system for converting complex JSON objects into flat, readable text formats optimized for Large Language Model (LLM) consumption.
+A powerful utility for converting complex objects into flat, readable text formats optimized for Large Language Model (LLM) consumption.
 
 ## Overview
 
-The FlatFormatter system consists of three main components:
-
-1. **FlatFormatter** - Core formatting utility with advanced features
-2. **Preset System** - Pre-configured formatters for common entity types
-3. **LLMContextBuilder** - Specialized builder for creating comprehensive LLM contexts
-
-## Core Features
-
-### FlatFormatter Service
-
-- **Multiple output formats**: sections, numbered, table, separator
-- **Array slicing**: Process only specific portions of large arrays
-- **Computed fields**: Add calculated fields during formatting
-- **Custom formatters**: Define how specific properties are displayed
-- **Flexible configuration**: Extensive customization options
-- **Null-safe processing**: Robust handling of missing or corrupted data
-
-### Preset System
-
-Pre-configured formatters for common entities:
-
-- **CharacterPreset** - Character information formatting
-- **ChapterPreset** - Chapter overview formatting  
-- **GenrePreset** - Genre specification formatting
-- **SettingPreset** - World/setting description formatting
-- **PlotPreset** - Plot structure formatting
-- **TargetAudiencePreset** - Audience specification formatting
-- **NarrativePreset** - Writing style/narrative formatting
-- **ChapterDataPreset** - Detailed chapter data formatting
-- **PageSummaryPreset** - Page/section summary formatting
-
-### LLMContextBuilder
-
-Specialized builder for creating comprehensive contexts:
-
-- **buildFullContext()** - Complete context with all available data
-- **buildMinimalContext()** - Essential information only
-- **buildStoryContext()** - Story-focused elements
-- **buildStyleContext()** - Writing style and format guidance
-- **formatPreviousChapterSummaries()** - Smart chapter history
-- **formatFollowingChapters()** - Upcoming chapter information
+**FlatFormatter** transforms structured data into LLM-friendly formats. Perfect for:
+- Preparing context for AI prompts
+- Formatting entities with consistent structure
+- Converting JSON to readable text
+- Building custom data pipelines
 
 ## Quick Start
 
-### Basic Usage
-
 ```typescript
-import { FlatFormatter, FormatConfigurator } from './flat-formatter';
+import { FlatFormatter } from 'ollama-middleware';
 
-// Simple formatting
-const data = { title: "Example", content: "Sample content" };
-const formatted = FlatFormatter.flatten(data, { format: 'sections' });
-
-// Advanced configuration
-const config = new FormatConfigurator()
-  .withFormat('numbered')
-  .withEntryTitleKey('title')
-  .ignoreEmptyValues(true)
-  .build();
-
-const result = FlatFormatter.flatten(data, config);
-```
-
-### Using Presets
-
-```typescript
-import { characterPreset, Character } from './presets';
-
-const character: Character = {
-  Name: "John Doe",
-  Description: "A mysterious protagonist",
-  Role: "Main character"
+const data = {
+  name: 'Alice',
+  age: 30,
+  occupation: 'Engineer',
+  skills: 'TypeScript, React, Node.js'
 };
 
-const formatted = characterPreset.formatForLLM(character, "## CHARACTER INFO:");
+// Basic formatting
+const formatted = FlatFormatter.flatten(data);
+console.log(formatted);
+// Output:
+// name: Alice
+// age: 30
+// occupation: Engineer  
+// skills: TypeScript, React, Node.js
 ```
 
-### Using LLMContextBuilder
+## Core Features
+
+### Multiple Output Formats
 
 ```typescript
-import { LLMContextBuilder } from './llm-context-builder';
+// Numbered list
+FlatFormatter.flatten(data, { format: 'numbered' });
+// 1. name: Alice
+// 2. age: 30
+// 3. occupation: Engineer
 
-const builder = new LLMContextBuilder();
-const context = builder.buildFullContext(promptData);
+// Bulleted list
+FlatFormatter.flatten(data, { format: 'bulleted' });
+// • name: Alice
+// • age: 30
+// • occupation: Engineer
+
+// Sections
+FlatFormatter.flatten(data, { format: 'sections' });
+// === name ===
+// Alice
+// === age ===
+// 30
+
+// Table format
+FlatFormatter.flatten(data, { format: 'table' });
+// | name        | Alice          |
+// | age         | 30             |
+// | occupation  | Engineer       |
 ```
 
-## Advanced Features
+### Array Formatting
+
+```typescript
+const users = [
+  { name: 'Alice', role: 'Engineer' },
+  { name: 'Bob', role: 'Designer' },
+  { name: 'Charlie', role: 'Manager' }
+];
+
+FlatFormatter.flatten(users, { 
+  format: 'numbered',
+  entryTitleKey: 'name' 
+});
+// 1. Alice
+//    role: Engineer
+// 2. Bob
+//    role: Designer
+// 3. Charlie
+//    role: Manager
+```
 
 ### Array Slicing
 
-Process only specific portions of large arrays:
-
 ```typescript
-const result = FlatFormatter.sliceArray(largeArray, 0, 10, {
-  format: 'numbered',
-  entryTitleKey: 'name'
+// Process only first 10 items
+FlatFormatter.flatten(largeArray, {
+  arraySliceStart: 0,
+  arraySliceEnd: 10
+});
+
+// Process items 20-30
+FlatFormatter.flatten(largeArray, {
+  arraySliceStart: 20,
+  arraySliceEnd: 30
 });
 ```
 
 ### Computed Fields
 
-Add calculated fields during formatting:
+Add dynamic fields during formatting:
 
 ```typescript
-const config = new FormatConfigurator()
-  .withComputedField('position', (item, index, allItems) => 
-    `${index + 1} of ${allItems.length}`
-  )
-  .withComputedField('category', (item) => 
-    item.type === 'main' ? 'PRIMARY' : 'SECONDARY'
-  )
-  .build();
+const person = { firstName: 'Alice', lastName: 'Smith', age: 30 };
+
+FlatFormatter.flatten(person, {
+  computedFields: {
+    fullName: (p) => `${p.firstName} ${p.lastName}`,
+    ageGroup: (p) => p.age < 30 ? 'Young' : 'Adult'
+  }
+});
+// firstName: Alice
+// lastName: Smith
+// age: 30
+// fullName: Alice Smith
+// ageGroup: Adult
 ```
 
-### Custom Formatters
-
-Define how specific properties are displayed:
+### Ignored Keys
 
 ```typescript
-const config = new FormatConfigurator()
-  .withCustomFormatter('date', (date) => new Date(date).toLocaleDateString())
-  .withCustomFormatter('tags', (tags) => tags.join(' | '))
-  .withCustomFormatter('status', (status) => status.toUpperCase())
-  .build();
+FlatFormatter.flatten(data, {
+  ignoredKeys: ['id', 'internal', 'metadata']
+});
+// These keys won't appear in output
 ```
 
-## Entity Types
+### Custom Separators and Formatting
 
-The system includes comprehensive TypeScript interfaces:
+```typescript
+FlatFormatter.flatten(data, {
+  keyValueSeparator: ' = ',
+  indent: 4,
+  lineBreak: '\n\n'
+});
+```
 
-- **Character** - Character definitions with personality, background, relationships
-- **Chapter** - Chapter information with goals, conflicts, settings
-- **ChapterData** - Detailed chapter data with context
-- **Genre** - Genre specifications with conventions and themes
-- **Setting** - World-building elements with culture, politics, geography
-- **Plot** - Plot structure with conflicts, climax, resolution
-- **TargetAudience** - Audience specifications with preferences
-- **Narrative** - Writing style with voice, tense, techniques
+## Using Presets
+
+Presets encapsulate preprocessing logic for domain entities.
+
+### Using the Example Preset
+
+```typescript
+import { personPreset } from 'ollama-middleware';
+
+const person = {
+  name: 'Alice',
+  age: 30,
+  email: 'alice@example.com',
+  occupation: 'Engineer'
+};
+
+const formatted = personPreset.formatForLLM(person, "## USER PROFILE:");
+// ## USER PROFILE:
+// Name: Alice
+// Age: 30
+// Email: alice@example.com
+// Occupation: Engineer
+```
+
+### Creating Custom Presets
+
+#### Simple Preset Example
+
+```typescript
+import { BasePreset } from 'ollama-middleware';
+
+// For simple entities
+class MyEntityPreset extends BasePreset<MyEntity, ProcessedMyEntity> {
+  protected preprocessEntity(entity: MyEntity): ProcessedMyEntity {
+    return {
+      'Name': entity.name || 'Unknown',
+      'Value': String(entity.value || 0)
+    };
+  }
+}
+```
+
+#### Complex Preset Example
+
+See **`src/examples/flat-formatter-demo/product-preset.example.ts`** for a complete example.
+
+The **ProductPreset** demonstrates advanced preprocessing:
+
+```typescript
+// From src/examples/flat-formatter-demo/product-preset.example.ts
+import { productPreset, Product } from './examples/flat-formatter-demo/product-preset.example';
+
+const product: Product = {
+  name: 'Wireless Mouse',
+  description: 'Ergonomic wireless mouse with 3-year warranty',
+  category: 'Electronics',
+  
+  // Nested object
+  pricing: {
+    basePrice: 29.99,
+    currency: 'USD',
+    discountPercent: 15
+  },
+  
+  // Arrays
+  features: ['Bluetooth 5.0', 'Ergonomic design', '3-year warranty'],
+  tags: ['wireless', 'office', 'productivity'],
+  
+  // Nested object with arrays
+  metadata: {
+    manufacturer: 'TechCorp',
+    origin: 'USA',
+    certifications: ['CE', 'FCC', 'RoHS']
+  },
+  
+  // Array of objects
+  reviews: [
+    { rating: 5, comment: 'Great mouse!', author: 'Alice' },
+    { rating: 4, comment: 'Very comfortable', author: 'Bob' }
+  ],
+  
+  inStock: true,
+  quantity: 42
+};
+
+const formatted = productPreset.formatForLLM(product, "## PRODUCT:");
+```
+
+**Output:**
+```
+## PRODUCT:
+Name: Wireless Mouse
+Description: Ergonomic wireless mouse with 3-year warranty
+Category: Electronics
+Price: 29.99 USD
+Discount: 15% OFF
+Final Price: 25.49 USD
+Features: Bluetooth 5.0, Ergonomic design, 3-year warranty
+Tags: wireless, office, productivity
+Manufacturer: TechCorp
+Origin: USA
+Certifications: CE, FCC, RoHS
+Average Rating: 4.5 / 5
+Review Count: 2 reviews
+Sample Reviews: "Great mouse!" (5/5) - Alice; "Very comfortable" (4/5) - Bob
+Availability: In Stock (42 units available)
+```
+
+**Key preprocessing techniques shown:**
+- Nested object access: `product.pricing.basePrice`
+- Array joining: `product.features?.join(', ')`
+- Array mapping: `reviews.map(r => ...)`
+- Calculations: `basePrice * (1 - discount / 100)`
+- String composition: `` `${price} ${currency}` ``
+- Optional chaining: `product.metadata?.certifications`
+- Fallback values: `product.features || 'None'`
+
+### Advanced Preset Usage
+
+```typescript
+// Custom format configuration
+const customFormat = productPreset
+  .createFormat()
+  .withFormat('sections')
+  .withItemPrefix('=== PRODUCT')
+  .withItemSuffix('===')
+  .ignoreEmptyValues(true)
+  .build();
+
+const formatted = productPreset.formatForLLM(
+  products, 
+  "## PRODUCTS:", 
+  customFormat
+);
+```
 
 ## Configuration Options
 
-### Format Types
+### FormatConfig
 
-- **sections** - Markdown-style sections with headers
-- **numbered** - Numbered list format with indentation  
-- **table** - Table-like format with borders
-- **separator** - Custom separator-divided sections
-
-### Customization Options
-
-- **itemPrefix/itemSuffix** - Custom entry headers/footers
-- **entryTitleKey** - Property to use as entry titles
-- **keyValueSeparator** - Custom separator between keys and values
-- **ignoredKeys** - Properties to exclude from output
-- **ignoreEmptyValues** - Skip null/empty properties
-- **indentLevel** - Indentation depth for nested structures
+```typescript
+interface FormatConfig {
+  format?: 'sections' | 'numbered' | 'table' | 'separator' | 'bulleted';
+  keyValueSeparator?: string;
+  lineBreak?: string;
+  indent?: number;
+  entryTitleKey?: string;
+  entryTitleAsPrefix?: boolean;
+  itemPrefix?: string;
+  itemSuffix?: string;
+  ignoredKeys?: string[];
+  ignoreEmptyValues?: boolean;
+  arraySliceStart?: number;
+  arraySliceEnd?: number;
+  computedFields?: ComputedFieldOptions;
+  indexField?: { name: string; startValue: number };
+}
+```
 
 ## Best Practices
 
-### For LLM Optimization
+### 1. Choose the Right Format
 
-1. **Use meaningful entry titles** - Set `entryTitleKey` to improve readability
-2. **Ignore irrelevant data** - Use `ignoredKeys` to remove noise
-3. **Choose appropriate formats** - numbered for lists, sections for detailed content
-4. **Handle large datasets** - Use array slicing for performance
-5. **Validate input data** - Use presets for automatic null-safety
+- **sections**: For distinct entities with clear boundaries
+- **numbered**: For sequential lists or ranked items
+- **bulleted**: For unordered lists
+- **table**: For side-by-side comparison
+- **separator**: For minimal, clean output
 
-### Performance Considerations
+### 2. Use Presets for Consistent Entities
 
-1. **Array slicing** - Process only needed portions of large arrays
-2. **Ignore empty values** - Reduce output size with `ignoreEmptyValues: true`
-3. **Custom formatters** - Keep formatting functions simple and fast
-4. **Computed fields** - Use sparingly for complex calculations
+If you repeatedly format the same entity type, create a preset:
 
-## Error Handling
+```typescript
+// ✅ Good - reusable, consistent
+const formatted = productPreset.formatForLLM(product);
 
-The system includes comprehensive error handling:
+// ❌ Avoid - repetitive, inconsistent
+FlatFormatter.flatten(product, { /* same config every time */ });
+```
 
-- **Null-safe processing** - Automatic handling of missing data
-- **Fallback entities** - Generated when data is corrupted
-- **Type validation** - Runtime checks for data integrity  
-- **Graceful degradation** - Continues processing when individual items fail
+### 3. Leverage Computed Fields
 
-## Integration
+Add derived data without modifying source objects:
 
-The FlatFormatter integrates seamlessly with:
+```typescript
+FlatFormatter.flatten(order, {
+  computedFields: {
+    totalPrice: (o) => o.items.reduce((sum, i) => sum + i.price, 0),
+    itemCount: (o) => o.items.length
+  }
+});
+```
 
-- **Ollama Service** - Format data for AI model consumption
-- **JSON Cleaner** - Clean data before formatting
-- **Request Formatter** - Structure API requests
-- **Response Processor** - Format API responses
+### 4. Handle Large Arrays
+
+Use slicing for better performance:
+
+```typescript
+// Show first 20 results
+FlatFormatter.flatten(results, {
+  arraySliceStart: 0,
+  arraySliceEnd: 20
+});
+```
+
+### 5. Ignore Internal Fields
+
+```typescript
+FlatFormatter.flatten(entity, {
+  ignoredKeys: ['id', '_internal', '__typename', 'createdAt', 'updatedAt']
+});
+```
+
+## API Reference
+
+### FlatFormatter.flatten()
+
+```typescript
+static flatten(
+  data: any,
+  config?: FormatConfig
+): string
+```
+
+Main formatting method. Converts data to formatted string.
+
+### BasePreset.formatForLLM()
+
+```typescript
+formatForLLM(
+  entity: T | T[] | null | undefined,
+  header?: string,
+  config?: FormatConfig
+): string
+```
+
+Format entities using preset preprocessing.
+
+### FormatConfigurator
+
+Fluent API for building format configurations:
+
+```typescript
+preset
+  .createFormat()
+  .withFormat('numbered')
+  .withItemPrefix('ITEM')
+  .ignoreEmptyValues(true)
+  .withArraySlice(0, 10)
+  .build();
+```
 
 ## Examples
 
-See the comprehensive examples in the main README.md for detailed usage patterns and real-world scenarios.
+See [EXAMPLE.md](./EXAMPLE.md) for comprehensive usage examples.
+
+## Related Documentation
+
+- [Main Documentation](../../../docs/README.md)
+- [Request Formatting Guide](../../../docs/REQUEST_FORMATTING.md)
+- [Getting Started](../../../docs/GETTING_STARTED.md)

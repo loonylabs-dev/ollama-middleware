@@ -1,14 +1,11 @@
-import { ollamaService } from '../../middleware/services/ollama/ollama.service';
-import { getModelConfig, ModelConfigKey, OllamaModelConfig } from '../../middleware/shared/config/models.config';
-import { ResponseProcessorService } from '../../middleware/services/response-processor/response-processor.service';
-import { logger } from '../../middleware/shared/utils/logging.utils';
+import { BaseAIUseCase } from '../../middleware/usecases/base/base-ai.usecase';
+import { BaseAIRequest, BaseAIResult } from '../../middleware/shared/types/base-request.types';
 import { 
-  FlatFormatter, 
-  LLMContextBuilder,
-  settingPreset,
-  genrePreset,
-  targetAudiencePreset 
-} from '../../middleware/services/flat-formatter';
+  CHARACTER_GENERATOR_SYSTEM_MESSAGE, 
+  CHARACTER_GENERATOR_USER_TEMPLATE 
+} from './character-generator.messages';
+import { FlatFormatter } from '../../middleware/services/flat-formatter';
+import { ModelParameterOverrides } from '../../middleware/services/model-parameter-manager/model-parameter-manager.service';
 
 /**
  * Character generation prompt data
@@ -40,12 +37,9 @@ export interface CharacterPromptData {
 
 /**
  * Character generation request interface
- * Overrides the base prompt type to support complex objects
+ * Extends BaseAIRequest to support complex prompt objects
  */
-export interface CharacterGeneratorRequest {
-  prompt: CharacterPromptData;
-  authToken?: string;
-}
+export interface CharacterGeneratorRequest extends BaseAIRequest<CharacterPromptData | string> {}
 
 /**
  * Generated character structure (expected JSON response)
@@ -72,12 +66,9 @@ export interface GeneratedCharacter {
 
 /**
  * Character generation result interface
+ * Extends BaseAIResult with character-specific data
  */
-export interface CharacterGeneratorResult {
-  generatedContent: string;
-  model: string;
-  usedPrompt: string;
-  thinking?: string;
+export interface CharacterGeneratorResult extends BaseAIResult {
   character: GeneratedCharacter;
   rawResponse: string;
   wasRepaired: boolean;
@@ -89,64 +80,60 @@ export interface CharacterGeneratorResult {
  * - Structured JSON output with schema
  * - JSON cleaning and repair
  * - Complex context building with presets
+ * - Message pattern with separate message files
  */
-export class CharacterGeneratorUseCase {
+export class CharacterGeneratorUseCase extends BaseAIUseCase<CharacterPromptData | string, CharacterGeneratorRequest, CharacterGeneratorResult> {
   
   /**
-   * Model configuration key to use for this use case
+   * System message from message file
    */
-  protected readonly modelConfigKey: ModelConfigKey = 'MODEL1';
+  protected readonly systemMessage = CHARACTER_GENERATOR_SYSTEM_MESSAGE;
 
   /**
-   * Get the model configuration for this use case
+   * Get the user template from message file
    */
-  protected get modelConfig(): OllamaModelConfig {
-    return getModelConfig(this.modelConfigKey);
+  protected getUserTemplate(): (formattedPrompt: string) => string {
+    return CHARACTER_GENERATOR_USER_TEMPLATE;
   }
 
   /**
-   * System message with detailed JSON schema for character generation
+   * Override model parameters for character generation
+   * 
+   * Uses the Creative Writing preset optimized for generating rich, varied character descriptions.
+   * This configuration balances creativity with coherence, ensuring characters are interesting
+   * while maintaining consistency across all fields.
+   * 
+   * @returns ModelParameterOverrides with Creative Writing preset
+   * 
+   * **Parameter Selection Rationale:**
+   * - `temperature: 0.8` - Higher temperature for creative, varied character traits and descriptions
+   * - `repeatPenalty: 1.3` - Moderate penalty to reduce word repetition while allowing natural language flow
+   * - `frequencyPenalty: 0.2` - Encourages diverse vocabulary for richer character descriptions
+   * - `presencePenalty: 0.2` - Promotes introducing new character traits and avoiding clichés
+   * - `topP: 0.92` - High nucleus sampling for creative token selection
+   * - `topK: 60` - Moderate vocabulary diversity for balanced output
+   * - `repeatLastN: 128` - Extended context window to maintain consistency across all character fields
+   * 
+   * **Expected Impact:**
+   * - More unique and memorable characters with distinct personalities
+   * - Reduced repetitive phrasing across character description fields
+   * - Natural, fluid writing style that doesn't feel formulaic
+   * - Consistent character voice throughout the entire description
+   * 
+   * For more information about parameter presets, see docs/OLLAMA_PARAMETERS.md
    */
-  protected readonly systemMessage = `You are an expert character creation assistant for creative writing. Your task is to generate detailed, compelling characters based on the provided context.
-
-IMPORTANT: You MUST respond with ONLY a valid JSON object following this exact schema:
-
-{
-  "Name": "Full character name",
-  "Age": "Age or age range (e.g. '25' or 'Early 20s')",
-  "Description": "Brief 2-3 sentence character overview",
-  "Appearance": "Detailed physical description including distinguishing features",
-  "Personality": "Core personality traits, temperament, and behavioral patterns",
-  "Background": "Character's history, upbringing, and formative experiences",
-  "Goals": "What the character wants to achieve (short and long-term)",
-  "Conflicts": "Internal and external conflicts the character faces",
-  "Relationships": "Key relationships and how they relate to others",
-  "SpecialAbilities": "Special skills, talents, or supernatural abilities (if any)",
-  "Weaknesses": "Character flaws, vulnerabilities, and limitations",
-  "Motivation": "Core driving force behind the character's actions",
-  "CharacterArc": "How the character is likely to grow or change",
-  "Dialogue_Style": "How the character speaks and communicates",
-  "Key_Relationships": ["Array of important relationship types"],
-  "Character_Flaws": ["Array of specific character flaws"],
-  "Strengths": ["Array of character strengths and positive traits"]
-}
-
-Rules:
-- Respond with ONLY the JSON object, no additional text
-- All fields are required except SpecialAbilities
-- Make the character believable and three-dimensional
-- Ensure the character fits the provided setting, genre, and audience
-- Create internal consistency between all character elements
-- Include realistic flaws and strengths that create story potential
-
-<think>
-I need to analyze the provided context carefully:
-1. Review the setting, genre, and target audience constraints
-2. Consider the specific role and constraints provided
-3. Create a character that fits organically within these parameters
-4. Ensure all JSON fields are populated with detailed, relevant content
-5. Make sure the character has clear motivation and potential for growth
-</think>`;
+  protected getParameterOverrides(): ModelParameterOverrides {
+    // Creative Writing preset - optimized for character generation
+    return {
+      temperatureOverride: 0.8,
+      repeatPenalty: 1.3,
+      frequencyPenalty: 0.2,
+      presencePenalty: 0.2,
+      topP: 0.92,
+      topK: 60,
+      repeatLastN: 128
+    };
+  }
 
   /**
    * Format the user message using FlatFormatter and presets
@@ -158,9 +145,6 @@ I need to analyze the provided context carefully:
     }
     const { characterName, role, setting, genre, targetAudience, constraints } = prompt;
     
-    // Build context using FlatFormatter and presets
-    const contextBuilder = new LLMContextBuilder();
-    
     let contextSections: string[] = [];
     
     // Add role requirement
@@ -171,25 +155,34 @@ I need to analyze the provided context carefully:
       contextSections.push(`## SUGGESTED NAME:\n${characterName}`);
     }
     
-    // Format setting if provided
+    // Format setting as simple object if provided
     if (setting) {
-      const formattedSetting = settingPreset.formatForLLM(setting, "## STORY SETTING:");
-      contextSections.push(formattedSetting);
+      const formattedSetting = FlatFormatter.flatten(setting, {
+        format: 'separator',
+        keyValueSeparator: ': ',
+        separator: '•'
+      });
+      contextSections.push(`## STORY SETTING:\n${formattedSetting}`);
     }
     
-    // Format genre if provided
+    // Format genre as simple object if provided
     if (genre) {
-      const formattedGenre = genrePreset.formatForLLM(genre, "## GENRE REQUIREMENTS:");
-      contextSections.push(formattedGenre);
+      const formattedGenre = FlatFormatter.flatten(genre, {
+        format: 'separator',
+        keyValueSeparator: ': ',
+        separator: '•'
+      });
+      contextSections.push(`## GENRE REQUIREMENTS:\n${formattedGenre}`);
     }
     
     // Format target audience if provided
     if (targetAudience) {
-      const formattedAudience = targetAudiencePreset.formatForLLM(
-        targetAudience, 
-        "## TARGET AUDIENCE:"
-      );
-      contextSections.push(formattedAudience);
+      const formattedAudience = FlatFormatter.flatten(targetAudience, {
+        format: 'separator',
+        keyValueSeparator: ': ',
+        separator: '•'
+      });
+      contextSections.push(`## TARGET AUDIENCE:\n${formattedAudience}`);
     }
     
     // Format constraints using FlatFormatter
@@ -210,75 +203,6 @@ I need to analyze the provided context carefully:
     }
     
     return contextSections.join('\n\n');
-  }
-
-  /**
-   * Execute the character generation use case
-   */
-  public async execute(request: CharacterGeneratorRequest): Promise<CharacterGeneratorResult> {
-    if (!request.prompt) {
-      throw new Error('Valid prompt must be provided');
-    }
-
-    const formattedUserMessage = this.formatUserMessage(request.prompt);
-    const startTime = Date.now();
-
-    logger.info('Character Generator Use Case execution started', {
-      context: 'CharacterGeneratorUseCase',
-      metadata: {
-        model: this.modelConfig.name,
-        promptLength: formattedUserMessage.length
-      }
-    });
-
-    try {
-      const result = await ollamaService.callOllamaApiWithSystemMessage(
-        formattedUserMessage,
-        this.systemMessage,
-        {
-          model: this.modelConfig.name,
-          temperature: this.modelConfig.temperature,
-          authToken: this.modelConfig.bearerToken,
-          baseUrl: this.modelConfig.baseUrl,
-          debugContext: 'CharacterGeneratorUseCase'
-        }
-      );
-
-      if (!result || !result.message) {
-        throw new Error('No response received from the Ollama API');
-      }
-
-      // Process the response using the ResponseProcessorService
-      const { cleanedJson: processedContent, thinking: extractedThinking } = 
-        ResponseProcessorService.processResponse(result.message.content);
-      
-      const duration = Date.now() - startTime;
-
-      logger.info('Character Generator Use Case execution completed', {
-        context: 'CharacterGeneratorUseCase',
-        metadata: {
-          model: this.modelConfig.name,
-          duration,
-          responseLength: processedContent.length,
-          hasThinking: !!extractedThinking
-        }
-      });
-
-      return this.createResult(processedContent, formattedUserMessage, extractedThinking);
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      
-      logger.error('Character Generator Use Case execution failed', {
-        context: 'CharacterGeneratorUseCase',
-        metadata: {
-          model: this.modelConfig.name,
-          duration,
-          error: error instanceof Error ? error.message : String(error)
-        }
-      });
-      
-      throw error;
-    }
   }
 
   /**

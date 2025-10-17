@@ -8,13 +8,17 @@
     "start": "ts-node src/examples/simple-chat/index.ts",
     "dev": "ts-node-dev --inspect --respawn src/examples/simple-chat/index.ts",
     "build": "tsc",
-    "test": "npm run test:all",
-    "test:all": "npm run test:basic && npm run test:integration && npm run test:robustness",
+    "test": "npm run test:unit",
+    "test:all": "npm run test:unit && npm run test:basic && npm run test:integration && npm run test:robustness",
+    "test:unit": "jest",
+    "test:unit:watch": "jest --watch",
+    "test:unit:coverage": "jest --coverage",
     "test:basic": "node tests/basic/test-middleware.js",
     "test:integration": "node tests/integration/test-flat-formatter.js",
     "test:robustness": "node tests/robustness/test-json-handling.js",
     "test:e2e": "node tests/e2e/test-workflow.js",
-    "test:jest": "jest",
+    "test:manual:smoke": "ts-node tests/manual/smoke-test.ts",
+    "test:ci": "jest --runInBand --ci --coverage",
     "lint": "eslint src/**/*.ts",
     "clean": "rm -rf dist",
     "prepare": "npm run build"
@@ -30,21 +34,22 @@
     "json-cleaner",
     "logging"
   ],
-  "author": "Scribomate Team",
+  "author": "loonylabs-dev",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/planichttm/ollama-middleware.git"
+    "url": "https://github.com/loonylabs-dev/ollama-middleware.git"
   },
   "bugs": {
-    "url": "https://github.com/planichttm/ollama-middleware/issues"
+    "url": "https://github.com/loonylabs-dev/ollama-middleware/issues"
   },
-  "homepage": "https://github.com/planichttm/ollama-middleware#readme",
+  "homepage": "https://github.com/loonylabs-dev/ollama-middleware#readme",
   "dependencies": {
     "axios": "^1.7.9",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.18.2",
+    "gpt-tokenizer": "^3.2.0",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

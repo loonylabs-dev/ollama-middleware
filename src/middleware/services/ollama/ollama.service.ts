@@ -24,6 +24,7 @@ export interface OllamaRequestOptions {
   frequency_penalty?: number;
   presence_penalty?: number;
   repeat_last_n?: number;
+  num_predict?: number;
   // Debug context
   debugContext?: string;
   // Session ID for conversation continuity
@@ -63,15 +64,16 @@ export class OllamaService {
   ): Promise<OllamaResponse | null> {
     const { 
       authToken, 
-      model = "mistral:latest", 
+      model, 
       temperature = 0.7,
-      baseUrl = "http://localhost:11434",
+      baseUrl = process.env.MODEL1_URL || "http://localhost:11434",
       repeat_penalty,
       top_p,
       top_k,
       frequency_penalty,
       presence_penalty,
       repeat_last_n,
+      num_predict,
       debugContext,
       sessionId = uuidv4(),
       chapterNumber,
@@ -79,9 +81,17 @@ export class OllamaService {
       pageName
     } = options;
     
+    // Validate that model is provided
+    if (!model) {
+      throw new Error(
+        'Model name is required but not provided. ' +
+        'Please ensure MODEL1_NAME is set in your .env file or pass model explicitly in options.'
+      );
+    }
+    
     const headers: Record<string, string> = {
       'Content-Type': 'application/json'
-    };    
+    };
     
     if (authToken) {
       headers['Authorization'] = `Bearer ${authToken}`;
@@ -102,7 +112,8 @@ export class OllamaService {
         ...(top_k !== undefined && { top_k }),
         ...(frequency_penalty !== undefined && { frequency_penalty }),
         ...(presence_penalty !== undefined && { presence_penalty }),
-        ...(repeat_last_n !== undefined && { repeat_last_n })
+        ...(repeat_last_n !== undefined && { repeat_last_n }),
+        ...(num_predict !== undefined && { num_predict })
       }
     };
 
@@ -166,7 +177,8 @@ export class OllamaService {
             top_k,
             frequency_penalty,
             presence_penalty,
-            repeat_last_n
+            repeat_last_n,
+            num_predict
           }
         }
       },
@@ -202,6 +214,7 @@ export class OllamaService {
         // Add response info
         debugInfo.responseTimestamp = new Date();
         debugInfo.response = aiResponse.message.content;
+        debugInfo.rawResponseData = aiResponse;
         
         // Try to extract thinking content
         const thinkMatch = aiResponse.message.content.match(/<think>([\s\S]*?)<\/think>/);
@@ -291,6 +304,7 @@ export class OllamaService {
                 
                 debugInfo.responseTimestamp = new Date();
                 debugInfo.response = aiResponse.message.content;
+                debugInfo.rawResponseData = aiResponse;
                 
                 const thinkMatch = aiResponse.message.content.match(/<think>([\s\S]*?)<\/think>/);
                 if (thinkMatch && thinkMatch[1]) {
@@ -467,6 +481,7 @@ export class OllamaService {
     aiResponse.sessionId = sessionId;
     debugInfo.responseTimestamp = new Date();
     debugInfo.response = aiResponse.message.content;
+    debugInfo.rawResponseData = aiResponse;
     
     const thinkMatch = aiResponse.message.content.match(/<think>([\s\S]*?)<\/think>/);
     if (thinkMatch && thinkMatch[1]) {

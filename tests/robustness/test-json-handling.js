@@ -1,5 +1,6 @@
 // Robustness tests for JSON cleaning and error handling
 const { JsonCleanerService, ResponseProcessorService } = require('./dist/middleware/services');
+const { ControlCharDiagnostics } = require('./dist/middleware/services/json-cleaner/utils/control-char-diagnostics.util');
 
 console.log('🧪 Testing Middleware Robustness and Error Handling...\n');
 
@@ -252,6 +253,129 @@ async function testErrorScenarios() {
   };
 }
 
+async function testControlCharDiagnostics() {
+  console.log('🔍 Testing Control Character Diagnostics and Repair...\n');
+  
+  // Real-world malformed JSON cases that LLMs commonly produce
+  const CONTROL_CHAR_SCENARIOS = [
+    {
+      name: 'Unescaped newline in string',
+      json: '{"text": "line1\nline2"}',
+      expectRepair: true
+    },
+    {
+      name: 'Unescaped tab in string',
+      json: '{"text": "before\tafter"}',
+      expectRepair: true
+    },
+    {
+      name: 'Multiple control characters',
+      json: '{"text": "line1\nline2", "value": "tab\there"}',
+      expectRepair: true
+    },
+    {
+      name: 'Nested object with control chars',
+      json: '{"outer": {"inner": "text\nwith\nnewlines"}}',
+      expectRepair: true
+    },
+    {
+      name: 'Array with control chars',
+      json: '{"items": ["first\nitem", "second\titem"]}',
+      expectRepair: true
+    },
+    {
+      name: 'Unicode characters',
+      json: '{"emoji": "Hello 👋 World", "special": "Café"}',
+      expectRepair: true
+    },
+    {
+      name: 'LLM response pattern with thinking',
+      json: '<think>Processing...</think>{"result": "value\nwith\nnewlines"}',
+      expectRepair: true
+    },
+    {
+      name: 'Complex nested with multiple issues',
+      json: '{"name": "Test\nName", "nested": {"field": "value\twith\ttabs"}, "array": ["item1\n", "item2\t"]}',
+      expectRepair: true
+    },
+    {
+      name: 'Already valid JSON',
+      json: '{"text": "valid string", "number": 42}',
+      expectRepair: false
+    },
+    {
+      name: 'Mixed control chars in description',
+      json: '{"description": "A paragraph\nwith newlines\nand\ttabs\tfor formatting."}',
+      expectRepair: true
+    }
+  ];
+  
+  let totalTests = 0;
+  let passed = 0;
+  let failed = 0;
+  
+  for (const scenario of CONTROL_CHAR_SCENARIOS) {
+    totalTests++;
+    console.log(`Testing: ${scenario.name}...`);
+    console.log(`   Input: ${scenario.json.substring(0, 50)}...`);
+    
+    try {
+      // First, diagnose the issues
+      const diagnosis = ControlCharDiagnostics.diagnose(scenario.json);
+      
+      if (diagnosis.summary.hasControlChars) {
+        console.log(`   🔍 Detected ${diagnosis.summary.totalIssues} control character issues`);
+      }
+      
+      // Then, attempt repair
+      const repairResult = ControlCharDiagnostics.repair(scenario.json);
+      
+      if (repairResult.success) {
+        // Verify the repaired JSON is valid
+        try {
+          const parsed = JSON.parse(repairResult.repairedJson);
+          
+          if (repairResult.appliedFixes.length > 0) {
+            console.log(`   ✅ Successfully repaired with ${repairResult.appliedFixes.length} fixes`);
+            console.log(`   📋 Fix types: ${repairResult.appliedFixes.map(f => f.type).join(', ')}`);
+          } else {
+            console.log(`   ✅ Valid JSON (no repairs needed)`);
+          }
+          
+          console.log(`   📄 Result: ${repairResult.repairedJson.substring(0, 50)}...`);
+          passed++;
+          
+        } catch (parseError) {
+          console.log(`   ❌ Repair succeeded but result is invalid JSON: ${parseError.message}`);
+          failed++;
+        }
+      } else {
+        console.log(`   ❌ Repair failed: ${repairResult.errors?.join(', ')}`);
+        failed++;
+      }
+      
+    } catch (error) {
+      console.log(`   ❌ Test error: ${error.message}`);
+      failed++;
+    }
+    
+    console.log('');
+  }
+  
+  console.log('📊 Control Char Diagnostics Results:');
+  console.log(`   Total tests: ${totalTests}`);
+  console.log(`   Passed: ${passed}`);
+  console.log(`   Failed: ${failed}`);
+  console.log(`   Success rate: ${Math.round((passed / totalTests) * 100)}%\n`);
+  
+  return {
+    totalTests,
+    passed,
+    failed,
+    successRate: passed / totalTests
+  };
+}
+
 async function testPerformance() {
   console.log('⚡ Testing Performance...\n');
   
@@ -310,6 +434,7 @@ async function main() {
     const jsonResults = await testMalformedJsonCleaning();
     const processorResults = await testResponseProcessor();
     const errorResults = await testErrorScenarios();
+    const controlCharResults = await testControlCharDiagnostics();
     const perfResults = await testPerformance();
     
     // Final summary
@@ -329,6 +454,10 @@ async function main() {
     console.log(`   Robustness: ${Math.round(errorResults.robustness * 100)}%`);
     console.log(`   Handled: ${errorResults.handledProperly}/${errorResults.totalScenarios} scenarios`);
     
+    console.log(`\n🔍 Control Char Diagnostics:`);
+    console.log(`   Success Rate: ${Math.round(controlCharResults.successRate * 100)}%`);
+    console.log(`   Passed: ${controlCharResults.passed}/${controlCharResults.totalTests} tests`);
+    
     console.log(`\n⚡ Performance:`);
     console.log(`   Large JSON Processing: ${perfResults.success ? 'PASSED' : 'FAILED'}`);
     console.log(`   Processing Time: ${perfResults.duration}ms`);
@@ -337,8 +466,9 @@ async function main() {
     const overallSuccess = (
       jsonResults.successRate +
       processorResults.successRate +
-      errorResults.robustness
-    ) / 3;
+      errorResults.robustness +
+      controlCharResults.successRate
+    ) / 4;
     
     console.log(`\n🎯 OVERALL ROBUSTNESS: ${Math.round(overallSuccess * 100)}%`);
     
