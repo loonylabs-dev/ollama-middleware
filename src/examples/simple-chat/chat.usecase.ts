@@ -1,10 +1,11 @@
 import { BaseAIUseCase } from '../../middleware/usecases/base/base-ai.usecase';
 import { BaseAIRequest, BaseAIResult } from '../../middleware/shared/types/base-request.types';
+import { SIMPLE_CHAT_SYSTEM_MESSAGE, SIMPLE_CHAT_USER_TEMPLATE } from './chat.messages';
 
 /**
  * Simple chat request interface
  */
-export interface ChatRequest extends BaseAIRequest {
+export interface ChatRequest extends BaseAIRequest<string> {
   message: string;
 }
 
@@ -18,16 +19,21 @@ export interface ChatResult extends BaseAIResult {
 /**
  * Simple chat use case for testing the middleware
  */
-export class SimpleChatUseCase extends BaseAIUseCase<ChatRequest, ChatResult> {
-  protected readonly systemMessage = `You are a helpful AI assistant. 
-Provide clear, concise, and friendly responses to user messages.
-Be conversational but informative.`;
+export class SimpleChatUseCase extends BaseAIUseCase<string, ChatRequest, ChatResult> {
+  protected readonly systemMessage = SIMPLE_CHAT_SYSTEM_MESSAGE;
 
   /**
    * Format the user message for the chat
    */
   protected formatUserMessage(prompt: any): string {
     return typeof prompt === 'string' ? prompt : JSON.stringify(prompt);
+  }
+
+  /**
+   * Get the user template from message file
+   */
+  protected getUserTemplate(): (formattedPrompt: string) => string {
+    return SIMPLE_CHAT_USER_TEMPLATE;
   }
 
   /**

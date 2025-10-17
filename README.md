@@ -71,7 +71,7 @@ npm install git+https://github.com/planichttm/ollama-middleware.git#v1.0.0
 import { BaseAIUseCase, BaseAIRequest, BaseAIResult } from 'ollama-middleware';
 
 // Define your request/response interfaces
-interface MyRequest extends BaseAIRequest {
+interface MyRequest extends BaseAIRequest<string> {
   message: string;
 }
 
@@ -80,11 +80,16 @@ interface MyResult extends BaseAIResult {
 }
 
 // Create your use case
-class MyChatUseCase extends BaseAIUseCase<MyRequest, MyResult> {
+class MyChatUseCase extends BaseAIUseCase<string, MyRequest, MyResult> {
   protected readonly systemMessage = "You are a helpful assistant.";
   
+  // Required: return user message template function
+  protected getUserTemplate(): (formattedPrompt: string) => string {
+    return (message) => message;
+  }
+  
   protected formatUserMessage(prompt: any): string {
-    return prompt.message;
+    return typeof prompt === 'string' ? prompt : prompt.message;
   }
   
   protected createResult(content: string, usedPrompt: string, thinking?: string): MyResult {
@@ -199,10 +204,10 @@ NODE_ENV=development
 # Logging
 LOG_LEVEL=info
 
-# Ollama Model Configuration
-MODEL1_URL=http://localhost:11434
-MODEL1_NAME=mistral:latest
-MODEL1_TOKEN=optional-auth-token
+# Ollama Model Configuration (REQUIRED)
+MODEL1_NAME=phi3:mini              # Required: Your model name
+MODEL1_URL=http://localhost:11434  # Optional: Defaults to localhost
+MODEL1_TOKEN=optional-auth-token   # Optional: For authenticated servers
 ```
 
 </details>
@@ -372,9 +377,10 @@ Flexible model management:
 ```typescript
 import { getModelConfig } from 'ollama-middleware';
 
+// MODEL1_NAME is required in .env or will throw error
 const config = getModelConfig('MODEL1');
-console.log(config.name);     // mistral:latest
-console.log(config.baseUrl);  // http://localhost:11434
+console.log(config.name);     // Value from MODEL1_NAME env variable
+console.log(config.baseUrl);  // Value from MODEL1_URL or default localhost
 ```
 
 </details>

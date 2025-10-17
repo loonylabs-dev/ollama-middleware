@@ -27,9 +27,10 @@ NODE_ENV=development
 LOG_LEVEL=info
 
 # Ollama Model Configuration
-MODEL1_URL=http://localhost:11434
-MODEL1_NAME=mistral:latest
-MODEL1_TOKEN=optional-auth-token
+# IMPORTANT: MODEL1_NAME is REQUIRED
+MODEL1_NAME=phi3:mini               # Required: Your model name (e.g., phi3:mini, llama3:8b, gemma2:2b)
+MODEL1_URL=http://localhost:11434  # Optional: Defaults to localhost:11434
+MODEL1_TOKEN=your-token-here        # Optional: Only for authenticated Ollama servers
 ```
 
 ### 2. Basic Use Case Implementation
@@ -44,7 +45,7 @@ import {
 } from 'ollama-middleware';
 
 // Define your interfaces
-interface ChatRequest extends BaseAIRequest {
+interface ChatRequest extends BaseAIRequest<string> {
   message: string;
 }
 
@@ -53,11 +54,16 @@ interface ChatResult extends BaseAIResult {
 }
 
 // Implement your use case
-class SimpleChatUseCase extends BaseAIUseCase<ChatRequest, ChatResult> {
+class SimpleChatUseCase extends BaseAIUseCase<string, ChatRequest, ChatResult> {
   protected readonly systemMessage = \`
     You are a helpful AI assistant. 
     Provide clear and concise responses.
   \`;
+
+  // Required: Return the user template function
+  protected getUserTemplate(): (formattedPrompt: string) => string {
+    return (message) => message;  // For simple chat, return message as-is
+  }
 
   protected formatUserMessage(prompt: any): string {
     return typeof prompt === 'string' ? prompt : prompt.message;
@@ -198,10 +204,10 @@ You can configure multiple models:
 ```typescript
 import { getModelConfig } from 'ollama-middleware';
 
-// Get specific model config
+// Get specific model config (throws error if MODEL1_NAME not set)
 const model1 = getModelConfig('MODEL1');
-console.log(model1.name);     // mistral:latest
-console.log(model1.baseUrl);  // http://localhost:11434
+console.log(model1.name);     // Value from MODEL1_NAME env variable
+console.log(model1.baseUrl);  // Value from MODEL1_URL or default localhost
 
 // Use in your use case
 class MyUseCase extends BaseAIUseCase<MyRequest, MyResult> {
@@ -265,8 +271,8 @@ npm install @types/node @types/express
 If you get "model not found" errors:
 
 1. Check available models: `ollama list`
-2. Pull the model: `ollama pull mistral:latest`
-3. Update your `.env` with the correct model name
+2. Pull a model: `ollama pull phi3:mini` (or any model you prefer)
+3. Set MODEL1_NAME in your `.env` file to match the model name
 
 ## Getting Help
 

@@ -1,5 +1,5 @@
 import { ollamaService } from '../../services/ollama/ollama.service';
-import { getModelConfig, ModelConfigKey, OllamaModelConfig } from '../../shared/config/models.config';
+import { getModelConfig, ModelConfigKey, ValidatedOllamaModelConfig } from '../../shared/config/models.config';
 import { ResponseProcessorService } from '../../services/response-processor/response-processor.service';
 import { BaseAIRequest, BaseAIResult } from '../../shared/types/base-request.types';
 import { logger } from '../../shared/utils/logging.utils';
@@ -7,8 +7,15 @@ import { logger } from '../../shared/utils/logging.utils';
 /**
  * Base abstract class for all AI use cases
  * Provides common functionality and enforces configuration for each use case
+ * TPrompt: The type of prompt data (string, object, etc.)
+ * TRequest: The request type (must extend BaseAIRequest<TPrompt>)
+ * TResult: The result type (must extend BaseAIResult)
  */
-export abstract class BaseAIUseCase<TRequest extends BaseAIRequest, TResult extends BaseAIResult> {
+export abstract class BaseAIUseCase<
+  TPrompt = string,
+  TRequest extends BaseAIRequest<TPrompt> = BaseAIRequest<TPrompt>, 
+  TResult extends BaseAIResult = BaseAIResult
+> {
   /**
    * The system message defines the behavior and instructions for the AI model
    * Must be defined by each specific use case
@@ -31,8 +38,9 @@ export abstract class BaseAIUseCase<TRequest extends BaseAIRequest, TResult exte
 
   /**
    * Get the model configuration for this use case
+   * Returns validated config with guaranteed model name
    */
-  protected get modelConfig(): OllamaModelConfig {
+  protected get modelConfig(): ValidatedOllamaModelConfig {
     return getModelConfig(this.modelConfigKey);
   }
 
@@ -50,10 +58,11 @@ export abstract class BaseAIUseCase<TRequest extends BaseAIRequest, TResult exte
   }
 
   /**
-   * Abstract method that each use case can implement
+   * Abstract method that each use case MUST implement
    * Returns the specific template function for the use case
+   * This enforces the message pattern: each use case should have a corresponding message file
    */
-  protected getUserTemplate?(): (formattedPrompt: string) => string;
+  protected abstract getUserTemplate(): (formattedPrompt: string) => string;
 
   /**
    * Execute the AI use case
@@ -65,7 +74,12 @@ export abstract class BaseAIUseCase<TRequest extends BaseAIRequest, TResult exte
       throw new Error('Valid prompt must be provided');
     }
 
-    const formattedUserMessage = this.formatUserMessage(request.prompt);
+    // Format the raw prompt using formatUserMessage
+    const formattedPrompt = this.formatUserMessage(request.prompt);
+    
+    // Apply the user template to create the final message
+    const userTemplate = this.getUserTemplate();
+    const formattedUserMessage = userTemplate(formattedPrompt);
     const startTime = Date.now();
 
     logger.info('AI Use Case execution started', {

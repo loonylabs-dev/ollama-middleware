@@ -1,5 +1,5 @@
 /**
- * Smoke test for ollama-middleware with gemma3:4b
+ * Smoke test for ollama-middleware with MODEL1 configuration
  * Tests the enhanced logging and data flow features
  */
 
@@ -8,6 +8,7 @@ import { OllamaService } from '../src/middleware/services/ollama/ollama.service'
 import { DataFlowLoggerService } from '../src/middleware/services/data-flow-logger/data-flow-logger.service';
 import { ControlCharDiagnostics } from '../src/middleware/services/json-cleaner/utils/control-char-diagnostics.util';
 import { getMemoryUsage } from '../src/middleware/shared/utils/memory-management.utils';
+import { getModelConfig } from '../src/middleware/shared/config/models.config';
 
 // Load environment variables
 dotenv.config();
@@ -40,15 +41,13 @@ async function runSmokeTest() {
   console.log('✅ DataFlowLogger working\n');
 
   // Test 4: Ollama Service (Real API call)
-  console.log('🤖 Test 4: Ollama Service with gemma3:4b');
+  const modelConfig = getModelConfig('MODEL1');
+  console.log(`🤖 Test 4: Ollama Service with ${modelConfig.name}`);
   console.log('Attempting to call Ollama API...');
   
-  // Load configuration from .env
-  const baseUrl = process.env.MODEL1_URL || 'http://localhost:11434';
-  const authToken = process.env.MODEL1_TOKEN;
-  
-  console.log(`Using base URL: ${baseUrl}`);
-  console.log(`Auth token configured: ${!!authToken}`);
+  console.log(`Using base URL: ${modelConfig.baseUrl}`);
+  console.log(`Auth token configured: ${!!modelConfig.bearerToken}`);
+  console.log(`Model: ${modelConfig.name}`);
   
   const ollamaService = new OllamaService();
   
@@ -57,10 +56,10 @@ async function runSmokeTest() {
       'Say "Hello from ollama-middleware test!" in exactly 5 words.',
       'You are a helpful assistant.',
       {
-        model: 'gemma3:4b',
-        temperature: 0.7,
-        baseUrl,
-        authToken,
+        model: modelConfig.name,
+        temperature: modelConfig.temperature,
+        baseUrl: modelConfig.baseUrl,
+        authToken: modelConfig.bearerToken,
         debugContext: 'smoke-test',
         sessionId: `smoke-${Date.now()}`
       }
@@ -104,13 +103,13 @@ async function runSmokeTest() {
       console.log('\n✨ ALL TESTS PASSED! ✨');
     } else {
       console.log('❌ Ollama API call returned null');
-      console.log('⚠️  Check if Ollama is running and gemma3:4b is available');
+      console.log(`⚠️  Check if Ollama is running and ${modelConfig.name} is available`);
     }
   } catch (error) {
     console.log('❌ Ollama API call failed');
     console.error('Error:', error instanceof Error ? error.message : error);
     console.log('\n⚠️  Make sure Ollama is running: `ollama serve`');
-    console.log('⚠️  Make sure gemma3:4b is pulled: `ollama pull gemma3:4b`');
+    console.log(`⚠️  Make sure model is available: \`ollama pull ${modelConfig.name}\``);
   }
 
   // Final memory check

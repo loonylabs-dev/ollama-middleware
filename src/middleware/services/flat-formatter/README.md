@@ -191,10 +191,35 @@ The system includes comprehensive error handling:
 
 The FlatFormatter integrates seamlessly with:
 
+- **BaseAIUseCase** - Format prompts in use case implementations
+- **Message Templates** - Structure user messages with formatted context
 - **Ollama Service** - Format data for AI model consumption
 - **JSON Cleaner** - Clean data before formatting
-- **Request Formatter** - Structure API requests
 - **Response Processor** - Format API responses
+
+### Integration with Use Cases
+
+```typescript
+import { BaseAIUseCase } from '../usecases/base/base-ai.usecase';
+import { FlatFormatter, settingPreset } from '../services/flat-formatter';
+import { MY_USE_CASE_USER_TEMPLATE } from '../messages/my-usecase.messages';
+
+export class MyUseCase extends BaseAIUseCase<MyRequest, MyResult> {
+  protected getUserTemplate(): (formattedPrompt: string) => string {
+    return MY_USE_CASE_USER_TEMPLATE;
+  }
+
+  protected formatUserMessage(prompt: any): string {
+    // Use FlatFormatter to structure the context
+    const formattedSetting = settingPreset.formatForLLM(
+      prompt.setting, 
+      "## STORY SETTING:"
+    );
+    
+    return formattedSetting;
+  }
+}
+```
 
 ## Examples
 

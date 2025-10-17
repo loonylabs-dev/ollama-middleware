@@ -63,9 +63,9 @@ export class OllamaService {
   ): Promise<OllamaResponse | null> {
     const { 
       authToken, 
-      model = "mistral:latest", 
+      model, 
       temperature = 0.7,
-      baseUrl = "http://localhost:11434",
+      baseUrl = process.env.MODEL1_URL || "http://localhost:11434",
       repeat_penalty,
       top_p,
       top_k,
@@ -79,9 +79,17 @@ export class OllamaService {
       pageName
     } = options;
     
+    // Validate that model is provided
+    if (!model) {
+      throw new Error(
+        'Model name is required but not provided. ' +
+        'Please ensure MODEL1_NAME is set in your .env file or pass model explicitly in options.'
+      );
+    }
+    
     const headers: Record<string, string> = {
       'Content-Type': 'application/json'
-    };    
+    };
     
     if (authToken) {
       headers['Authorization'] = `Bearer ${authToken}`;

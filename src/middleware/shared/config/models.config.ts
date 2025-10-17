@@ -1,7 +1,7 @@
-import { OllamaModelConfig, ModelsConfigMap } from '../types';
+import { OllamaModelConfig, ValidatedOllamaModelConfig, ModelsConfigMap } from '../types';
 
 // Re-export for compatibility
-export { OllamaModelConfig, ModelsConfigMap };
+export { OllamaModelConfig, ValidatedOllamaModelConfig, ModelsConfigMap };
 
 /**
  * Default model configurations
@@ -9,7 +9,7 @@ export { OllamaModelConfig, ModelsConfigMap };
  */
 export const MODELS: ModelsConfigMap = {
   'MODEL1': {
-    name: process.env.MODEL1_NAME || 'gemma3:4b',
+    name: process.env.MODEL1_NAME,
     baseUrl: process.env.MODEL1_URL || 'http://localhost:11434',
     bearerToken: process.env.MODEL1_TOKEN,
     temperature: 0.8,
@@ -22,9 +22,21 @@ export type ModelConfigKey = keyof typeof MODELS;
 
 /**
  * Helper function to get a model config by key
+ * Returns a validated config with guaranteed model name
+ * @throws Error if model name is not configured
  */
-export function getModelConfig(key: ModelConfigKey): OllamaModelConfig {
-  return MODELS[key];
+export function getModelConfig(key: ModelConfigKey): ValidatedOllamaModelConfig {
+  const config = MODELS[key];
+  
+  if (!config.name) {
+    throw new Error(
+      `Model name for ${key} is not configured. ` +
+      `Please set MODEL1_NAME in your .env file or environment variables.`
+    );
+  }
+  
+  // Type assertion: we've validated that name exists
+  return config as ValidatedOllamaModelConfig;
 }
 
 /**

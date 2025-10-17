@@ -52,8 +52,16 @@ This directory contains comprehensive test suites for validating all aspects of 
     - `json-cleaner/cleaning-engine.thinktag.extract.test.ts` - Think tag extraction
     - `json-cleaner/cleaning-engine.missing-comma.test.ts` - Missing comma repair
     - `json-cleaner/cleaning-engine.structural-repair.test.ts` - Structural bracket repair
+  - **Configuration Tests**:
+    - `config/model-config-validation.test.ts` - Model configuration validation and error handling
+  - **Message Pattern Tests**:
+    - `constants/json-formatting.constants.test.ts` - JSON formatting utility functions
+    - `messages/message-templates.test.ts` - Message template validation for use cases
 
-**Expected Results**: All unit tests should pass (33+ tests) with 70%+ code coverage
+**Expected Results**: All unit tests should pass (83+ tests) with 70%+ code coverage
+- JSON Formatting Constants: 25 tests validating utility functions
+- Message Templates: 26 tests validating system/user message templates
+- Model Configuration: 6 tests validating configuration and error handling
 
 **Run Command**:
 ```bash
@@ -97,7 +105,7 @@ npm run test:unit:coverage     # With coverage report
 
 **Prerequisites**: 
 - ✅ Ollama server running (`ollama serve`)
-- ✅ Model available (`ollama pull llama3.2:3b` or `mistral:latest`)
+- ✅ Model available (configured in MODEL1_NAME env variable)
 
 **Expected Results**: Complete workflow execution (fails gracefully if Ollama unavailable)
 
@@ -154,8 +162,8 @@ npm run test:unit:coverage     # With coverage report
 
 **Prerequisites for Smoke Test**:
 - ✅ Ollama server running (`ollama serve`)
-- ✅ Model available (`ollama pull gemma3:4b`)
-- ✅ Environment configured (`.env` file)
+- ✅ Model configured in .env: MODEL1_NAME=your-model (e.g., phi3:mini, gemma2:2b)
+- ✅ Environment configured (`.env` file with MODEL1_NAME, MODEL1_URL, MODEL1_TOKEN)
 
 **Run Command**:
 ```bash
@@ -178,9 +186,9 @@ npm run test:manual:smoke      # Run smoke test
    # Start Ollama server
    ollama serve
    
-   # Pull a model (choose one)
-   ollama pull mistral:latest
-   ollama pull llama3.2:3b
+   # Pull a model (use the one configured in your MODEL1_NAME)
+   ollama pull phi3:mini
+   # or any other model you prefer
    ```
 
 ### Running Tests
@@ -259,9 +267,9 @@ node e2e/test-workflow.js
 - **Note**: This is expected behavior if Ollama is not available
 
 **"Model not found"** (E2E Tests):
-- **Cause**: Requested model not installed
-- **Solution**: Pull model with `ollama pull model-name`
-- **Models tested**: `mistral:latest`, `llama3.2:3b`
+- **Cause**: MODEL1_NAME env variable not set or model not installed
+- **Solution**: Set MODEL1_NAME in .env and pull model with `ollama pull <model-name>`
+- **Example**: `MODEL1_NAME=phi3:mini` and `ollama pull phi3:mini`
 
 **JSON Cleaning below 70% success rate** (Robustness):
 - **Cause**: Possible regression in JSON repair strategies

@@ -11,9 +11,10 @@ export interface RequestWithUser extends Request {
 
 /**
  * Base interface for all AI use case requests
+ * Generic type allows for different prompt types (string, complex objects, etc.)
  */
-export interface BaseAIRequest {
-  prompt: string;
+export interface BaseAIRequest<TPrompt = string> {
+  prompt: TPrompt;
   authToken?: string;
 }
 
