@@ -56,13 +56,13 @@
 Install directly from GitHub:
 
 ```bash
-npm install git+https://github.com/planichttm/ollama-middleware.git
+npm install git+https://github.com/loonylabs-dev/ollama-middleware.git
 ```
 
 Or using a specific version/tag:
 
 ```bash
-npm install git+https://github.com/planichttm/ollama-middleware.git#v1.0.0
+npm install git+https://github.com/loonylabs-dev/ollama-middleware.git#v1.0.0
 ```
 
 ### Basic Usage
@@ -105,57 +105,56 @@ class MyChatUseCase extends BaseAIUseCase<string, MyRequest, MyResult> {
 ```
 
 <details>
-<summary><strong>🎭 Advanced Character Generation Example</strong></summary>
+<summary><strong>🎭 Advanced Example with FlatFormatter</strong></summary>
 
 ```typescript
 import { 
   FlatFormatter, 
-  LLMContextBuilder,
-  characterPreset,
-  genrePreset,
-  settingPreset 
+  personPreset
 } from 'ollama-middleware';
 
-class CharacterGeneratorUseCase {
-  protected readonly systemMessage = `You are an expert character creator.
+class ProfileGeneratorUseCase extends BaseAIUseCase {
+  protected readonly systemMessage = `You are a professional profile creator.
   
 IMPORTANT: Respond with ONLY valid JSON following this schema:
 {
-  "Name": "Character name",
-  "Age": "Character age", 
-  "Description": "Brief character overview",
-  "Personality": "Core personality traits",
-  "Background": "Character history",
-  "Goals": "What they want to achieve",
-  "Conflicts": "Internal and external conflicts"
+  "name": "Person name",
+  "title": "Professional title", 
+  "summary": "Brief professional overview",
+  "skills": "Key skills and expertise",
+  "achievements": "Notable accomplishments"
 }`;
 
   // Use FlatFormatter and presets for rich context building
   protected formatUserMessage(prompt: any): string {
-    const { role, setting, genre, constraints } = prompt;
+    const { person, preferences, guidelines } = prompt;
     
     const contextSections = [
-      `## CHARACTER ROLE: ${role}`,
-      settingPreset.formatForLLM(setting, "## STORY SETTING:"),
-      genrePreset.formatForLLM(genre, "## GENRE REQUIREMENTS:"),
+      // Use preset for structured data
+      personPreset.formatForLLM(person, "## PERSON INFO:"),
       
-      // Format constraints with FlatFormatter
-      FlatFormatter.flatten(
-        constraints.map(constraint => ({ 
-          constraint: constraint,
+      // Use FlatFormatter for custom structures
+      `## PREFERENCES:\n${FlatFormatter.flatten(preferences, {
+        format: 'bulleted',
+        keyValueSeparator: ': '
+      })}`,
+      
+      // Format guidelines with FlatFormatter
+      `## GUIDELINES:\n${FlatFormatter.flatten(
+        guidelines.map(g => ({ 
+          guideline: g,
           priority: "MUST FOLLOW" 
         })),
         {
           format: 'numbered',
-          entryTitleKey: 'constraint',
-          ignoredKeys: ['constraint']
+          entryTitleKey: 'guideline',
+          ignoredKeys: ['guideline']
         }
-      )
+      )}`
     ];
     
     return contextSections.join('\n\n');
   }
-}
   
   protected createResult(content: string, usedPrompt: string, thinking?: string): MyResult {
     return {
@@ -163,15 +162,19 @@ IMPORTANT: Respond with ONLY valid JSON following this schema:
       model: this.modelConfig.name,
       usedPrompt,
       thinking,
-      response: content
+      profile: JSON.parse(content)
     };
   }
 }
 
 // Use it
-const chatUseCase = new MyChatUseCase();
-const result = await chatUseCase.execute({ 
-  prompt: { message: "Hello!" },
+const profileGen = new ProfileGeneratorUseCase();
+const result = await profileGen.execute({ 
+  prompt: { 
+    person: { name: "Alice", occupation: "Engineer" },
+    preferences: { tone: "professional", length: "concise" },
+    guidelines: ["Highlight technical skills", "Include leadership"]
+  },
   authToken: "optional-token"
 });
 ```
@@ -237,8 +240,12 @@ src/
 
 - [Getting Started Guide](docs/GETTING_STARTED.md)
 - [Architecture Overview](docs/ARCHITECTURE.md)
+- [Ollama Parameters Guide](docs/OLLAMA_PARAMETERS.md) - Complete parameter reference and presets
+- [Request Formatting Guide](docs/REQUEST_FORMATTING.md) - FlatFormatter vs RequestFormatterService
+- [Performance Monitoring](docs/PERFORMANCE_MONITORING.md) - Metrics and logging
 - [API Reference](docs/API_REFERENCE.md)
 - [Examples](docs/EXAMPLES.md)
+- [CHANGELOG](CHANGELOG.md) - Release notes and breaking changes
 
 ## 🧪 Testing and Examples
 
@@ -340,7 +347,7 @@ Run the included examples:
 
 ```bash
 # Clone the repository
-git clone https://github.com/planichttm/ollama-middleware.git
+git clone https://github.com/loonylabs-dev/ollama-middleware.git
 cd ollama-middleware
 
 # Install dependencies
@@ -407,6 +414,56 @@ const adaptiveRecipe = RecipeTemplates.adaptive();
 ```
 
 See [Recipe System Documentation](src/middleware/services/json-cleaner/recipe-system/README.md) for details.
+
+</details>
+
+<details>
+<summary><strong>📝 Request Formatting (FlatFormatter & RequestFormatterService)</strong></summary>
+
+**For simple data:** Use [FlatFormatter](src/middleware/services/flat-formatter/README.md)
+```typescript
+const flat = FlatFormatter.flatten({ name: 'Alice', age: 30 });
+```
+
+**For complex nested prompts:** Use RequestFormatterService
+```typescript
+import { RequestFormatterService } from 'ollama-middleware';
+
+const prompt = {
+  context: { genre: 'sci-fi', tone: 'dark' },
+  instruction: 'Write an opening'
+};
+
+const formatted = RequestFormatterService.formatUserMessage(
+  prompt, (s) => s, 'MyUseCase'
+);
+// Outputs: ## CONTEXT:\ngenre: sci-fi\ntone: dark\n\n## INSTRUCTION:\nWrite an opening
+```
+
+See [Request Formatting Guide](docs/REQUEST_FORMATTING.md) for details.
+
+</details>
+
+<details>
+<summary><strong>📊 Performance Monitoring & Metrics</strong></summary>
+
+Automatic performance tracking with `UseCaseMetricsLoggerService`:
+
+```typescript
+// Automatically logged for all use cases:
+// - Execution time
+// - Token usage (input/output)
+// - Generation speed (tokens/sec)
+// - Parameters used
+```
+
+Metrics appear in console logs:
+```
+✅ Completed AI use case [MyUseCase = phi3:mini] SUCCESS
+   Time: 2.5s | Input: 120 tokens | Output: 85 tokens | Speed: 34.0 tokens/sec
+```
+
+See [Performance Monitoring Guide](docs/PERFORMANCE_MONITORING.md) for advanced usage.
 
 </details>
 
@@ -518,8 +575,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Links
 
-- [📚 Documentation](https://github.com/planichttm/ollama-middleware/docs)
-- [🐛 Issues](https://github.com/planichttm/ollama-middleware/issues)
+- [📚 Documentation](https://github.com/loonylabs-dev/ollama-middleware/docs)
+- [🐛 Issues](https://github.com/loonylabs-dev/ollama-middleware/issues)
 - [📦 NPM Package](https://www.npmjs.com/package/ollama-middleware)
 
 ---
@@ -528,7 +585,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Made with ❤️ for the AI community**
 
-[![GitHub stars](https://img.shields.io/github/stars/planichttm/ollama-middleware?style=social)](https://github.com/planichttm/ollama-middleware/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/planichttm/ollama-middleware?style=social)](https://github.com/loonylabs-dev/ollama-middleware/stargazers)
 [![Follow on GitHub](https://img.shields.io/github/followers/planichttm?style=social&label=Follow)](https://github.com/planichttm)
 
 </div>

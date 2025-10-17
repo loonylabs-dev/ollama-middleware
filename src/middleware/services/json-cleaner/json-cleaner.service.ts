@@ -55,11 +55,16 @@ export class JsonCleanerService {
   }
 
   /**
-   * MAIN METHOD: Processing and cleaning JSON with control character pre-check
+   * LEGACY METHOD: Processing and cleaning JSON using orchestrator
+   *
+   * @deprecated Use processResponseAsync() instead for better results with the Recipe System
+   *
+   * This synchronous method uses the legacy orchestrator and is maintained for backwards compatibility.
+   * For new code, use processResponseAsync() which leverages the modern Recipe System.
    */
   public static processResponse(response: string): CleanedJsonResult {
     this.initialize();
-    
+
     // STEP 1: Input validation
     if (!response || response.trim().length === 0) {
       throw new Error('Empty input provided - cannot process');
@@ -73,10 +78,10 @@ export class JsonCleanerService {
       return { cleanedJson: trimmedResponse, thinking: '' };
     }
 
-    // Fallback: legacy orchestrator
-    jsonConsole.logWithPrefix('[JsonCleanerService] Processing through orchestrator...');
+    // Use legacy orchestrator (deprecated - use processResponseAsync for Recipe System)
+    jsonConsole.logWithPrefix('[JsonCleanerService] Processing through legacy orchestrator (deprecated)...');
     const result = this.orchestrator.processResponse(trimmedResponse);
-    
+
     if (!JsonValidationHelper.isValid(result.cleanedJson)) {
       jsonConsole.logWithPrefix('[JsonCleanerService] ⚠️ Warning: Final result is not valid JSON');
     }

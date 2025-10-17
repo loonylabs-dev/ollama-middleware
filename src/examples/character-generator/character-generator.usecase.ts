@@ -4,13 +4,7 @@ import {
   CHARACTER_GENERATOR_SYSTEM_MESSAGE, 
   CHARACTER_GENERATOR_USER_TEMPLATE 
 } from './character-generator.messages';
-import { 
-  FlatFormatter, 
-  LLMContextBuilder,
-  settingPreset,
-  genrePreset,
-  targetAudiencePreset 
-} from '../../middleware/services/flat-formatter';
+import { FlatFormatter } from '../../middleware/services/flat-formatter';
 import { ModelParameterOverrides } from '../../middleware/services/model-parameter-manager/model-parameter-manager.service';
 
 /**
@@ -151,9 +145,6 @@ export class CharacterGeneratorUseCase extends BaseAIUseCase<CharacterPromptData
     }
     const { characterName, role, setting, genre, targetAudience, constraints } = prompt;
     
-    // Build context using FlatFormatter and presets
-    const contextBuilder = new LLMContextBuilder();
-    
     let contextSections: string[] = [];
     
     // Add role requirement
@@ -164,25 +155,34 @@ export class CharacterGeneratorUseCase extends BaseAIUseCase<CharacterPromptData
       contextSections.push(`## SUGGESTED NAME:\n${characterName}`);
     }
     
-    // Format setting if provided
+    // Format setting as simple object if provided
     if (setting) {
-      const formattedSetting = settingPreset.formatForLLM(setting, "## STORY SETTING:");
-      contextSections.push(formattedSetting);
+      const formattedSetting = FlatFormatter.flatten(setting, {
+        format: 'separator',
+        keyValueSeparator: ': ',
+        separator: '•'
+      });
+      contextSections.push(`## STORY SETTING:\n${formattedSetting}`);
     }
     
-    // Format genre if provided
+    // Format genre as simple object if provided
     if (genre) {
-      const formattedGenre = genrePreset.formatForLLM(genre, "## GENRE REQUIREMENTS:");
-      contextSections.push(formattedGenre);
+      const formattedGenre = FlatFormatter.flatten(genre, {
+        format: 'separator',
+        keyValueSeparator: ': ',
+        separator: '•'
+      });
+      contextSections.push(`## GENRE REQUIREMENTS:\n${formattedGenre}`);
     }
     
     // Format target audience if provided
     if (targetAudience) {
-      const formattedAudience = targetAudiencePreset.formatForLLM(
-        targetAudience, 
-        "## TARGET AUDIENCE:"
-      );
-      contextSections.push(formattedAudience);
+      const formattedAudience = FlatFormatter.flatten(targetAudience, {
+        format: 'separator',
+        keyValueSeparator: ': ',
+        separator: '•'
+      });
+      contextSections.push(`## TARGET AUDIENCE:\n${formattedAudience}`);
     }
     
     // Format constraints using FlatFormatter

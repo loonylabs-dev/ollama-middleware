@@ -1,12 +1,22 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Inline helper for context type detection
+// Generic helper for context type detection
 class ContextTypeHelper {
   static detectContextType(context: any): string {
     if (!context) return 'unknown';
-    if (context.currentChapterNr || context.chapterNumber) return 'structured';
+
+    // Check for explicit type markers
+    if (context.contextType) return context.contextType;
+    if (context.type) return context.type;
     if (context.debugContext) return context.debugContext;
+
+    // Detect based on available fields (generic detection)
+    if (context.sessionId) return 'session';
+    if (context.userId) return 'user';
+    if (context.requestId) return 'request';
+    if (context.id) return 'structured';
+
     return 'generic';
   }
 }
@@ -41,17 +51,19 @@ export interface DataFlowEntry {
 
 /**
  * Enhanced service for logging data flow in AI processing pipelines
- * Features: 
+ * Features:
  * - Ring buffer (max 1000 entries per file)
  * - Full prompt/response storage
  * - Request flow tracking
  * - Stage flow summaries
+ * - Pluggable context identifier generation (generic by default)
  */
 export class DataFlowLoggerService {
   private static instance: DataFlowLoggerService;
   private readonly logDir = path.join(process.cwd(), 'logs', 'ollama', 'requests-data-flow');
   private currentRequestId: string | null = null;
   private readonly MAX_ENTRIES_PER_FILE = 1000;
+  private contextIdentifierGenerator?: (context: any) => string;
 
   private constructor() {
     this.ensureLogDirectoryExists();
@@ -62,6 +74,19 @@ export class DataFlowLoggerService {
       DataFlowLoggerService.instance = new DataFlowLoggerService();
     }
     return DataFlowLoggerService.instance;
+  }
+
+  /**
+   * Configure a custom context identifier generator
+   * @param generator Function that extracts a context identifier from the context object
+   * @example
+   * // For book-based applications:
+   * logger.setContextIdentifierGenerator(ctx => `C${ctx.chapter}P${ctx.page}`);
+   * // For session-based applications:
+   * logger.setContextIdentifierGenerator(ctx => ctx.sessionId || 'general');
+   */
+  setContextIdentifierGenerator(generator: (context: any) => string): void {
+    this.contextIdentifierGenerator = generator;
   }
 
   private ensureLogDirectoryExists(): void {
@@ -79,19 +104,25 @@ export class DataFlowLoggerService {
 
   /**
    * Get context identifier for logging
+   * Uses custom generator if configured, otherwise falls back to generic identifiers
    */
   private getContextIdentifier(context: any): string {
-    const chapterNr = context?.currentChapterNr || context?.chapterNumber;
-    const page = context?.currentPage || context?.pageNumber;
-    
-    if (chapterNr && page) {
-      return `C${chapterNr}P${page}`;
-    } else if (chapterNr) {
-      return `C${chapterNr}`;
-    } else if (page) {
-      return `P${page}`;
+    // Use custom generator if configured
+    if (this.contextIdentifierGenerator) {
+      try {
+        return this.contextIdentifierGenerator(context);
+      } catch (error) {
+        console.error('Custom context identifier generator failed, using fallback:', error);
+      }
     }
-    
+
+    // Generic fallback: try common identifier fields
+    if (context?.id) return `id-${context.id}`;
+    if (context?.sessionId) return `session-${context.sessionId}`;
+    if (context?.requestId) return `req-${context.requestId}`;
+    if (context?.userId) return `user-${context.userId}`;
+    if (context?.contextId) return `ctx-${context.contextId}`;
+
     return 'general';
   }
 

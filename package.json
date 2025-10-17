@@ -34,16 +34,16 @@
     "json-cleaner",
     "logging"
   ],
-  "author": "Scribomate Team",
+  "author": "loonylabs-dev",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/planichttm/ollama-middleware.git"
+    "url": "https://github.com/loonylabs-dev/ollama-middleware.git"
   },
   "bugs": {
-    "url": "https://github.com/planichttm/ollama-middleware/issues"
+    "url": "https://github.com/loonylabs-dev/ollama-middleware/issues"
   },
-  "homepage": "https://github.com/planichttm/ollama-middleware#readme",
+  "homepage": "https://github.com/loonylabs-dev/ollama-middleware#readme",
   "dependencies": {
     "axios": "^1.7.9",
     "cors": "^2.8.5",

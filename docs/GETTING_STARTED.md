@@ -276,6 +276,6 @@ If you get "model not found" errors:
 
 ## Getting Help
 
-- [Issues](https://github.com/planichttm/ollama-middleware/issues) - Report bugs or request features
-- [Discussions](https://github.com/planichttm/ollama-middleware/discussions) - Ask questions
+- [Issues](https://github.com/loonylabs-dev/ollama-middleware/issues) - Report bugs or request features
+- [Discussions](https://github.com/loonylabs-dev/ollama-middleware/discussions) - Ask questions
 - [Contributing](../CONTRIBUTING.md) - Contribute to the project

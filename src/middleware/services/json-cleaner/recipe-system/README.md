@@ -1,20 +1,20 @@
 # Recipe-Based JSON Cleaning System
 
-Ein flexibles, erweiterbares System zur Bereinigung und Reparatur von fehlerhaftem JSON aus LLM-Antworten.
+A flexible, extensible system for cleaning and repairing malformed JSON from LLM responses.
 
-## Überblick
+## Overview
 
-Das Recipe-System wurde von scribomate migriert und bietet:
+The Recipe System provides:
 
-- **Modulare Operationen**: Detektoren finden Probleme, Fixer reparieren sie
-- **Flexible Rezepte**: Conservative, Aggressive und Adaptive Templates
-- **Konditionslogik**: Bedingte Ausführung basierend auf JSON-Zustand
-- **Rollback-Support**: Checkpoints ermöglichen sicheres Experimentieren
-- **Detaillierte Metriken**: Tracking von Änderungen, Confidence und Performance
+- **Modular Operations**: Detectors find problems, Fixers repair them
+- **Flexible Recipes**: Conservative, Aggressive, and Adaptive templates
+- **Conditional Logic**: Conditional execution based on JSON state
+- **Rollback Support**: Checkpoints enable safe experimentation
+- **Detailed Metrics**: Tracking of changes, confidence, and performance
 
-## Schnellstart
+## Quick Start
 
-### 1. Quick Clean (einfachste Methode)
+### 1. Quick Clean (Easiest Method)
 
 ```typescript
 import { JsonCleanerFactory } from './recipe-system';
@@ -23,13 +23,13 @@ const malformedJson = '{"name": "John" "age": 30}';
 const result = await JsonCleanerFactory.quickClean(malformedJson);
 
 if (result.success) {
-  console.log('Gereinigtes JSON:', result.cleanedJson);
-  console.log('Änderungen:', result.totalChanges);
+  console.log('Cleaned JSON:', result.cleanedJson);
+  console.log('Changes:', result.totalChanges);
   console.log('Confidence:', result.confidence);
 }
 ```
 
-### 2. Mit spezifischem Template
+### 2. With Specific Template
 
 ```typescript
 import { CleaningEngine, RecipeTemplates } from './recipe-system';
@@ -39,43 +39,43 @@ const recipe = RecipeTemplates.adaptive();
 const result = await engine.clean(malformedJson, recipe);
 ```
 
-### 3. Über JsonCleanerService (empfohlen)
+### 3. Via JsonCleanerService (Recommended)
 
 ```typescript
 import { JsonCleanerService } from './json-cleaner.service';
 
-// Async mit neuem Recipe-System (mit Legacy-Fallback)
+// Async with new Recipe System (recommended)
 const result = await JsonCleanerService.processResponseAsync(response);
 
-// Sync mit Legacy-System (bestehende Kompatibilität)
+// Sync for backwards compatibility (if needed)
 const result = JsonCleanerService.processResponse(response);
 ```
 
-## Verfügbare Templates
+## Available Templates
 
 ### Conservative
-- Minimale Änderungen
-- Nur sichere Operationen
-- Beste Wahl für bereits fast valides JSON
+- Minimal changes
+- Only safe operations
+- Best choice for nearly-valid JSON
 
 ```typescript
 const recipe = RecipeTemplates.conservative();
 ```
 
 ### Aggressive
-- Maximale Reparaturversuche
-- Extraktion aus Markdown/Think-Tags
-- Strukturelle Reparaturen
-- Beste Wahl bei schweren Problemen
+- Maximum repair attempts
+- Extraction from Markdown/Think-Tags
+- Structural repairs
+- Best choice for severe problems
 
 ```typescript
 const recipe = RecipeTemplates.aggressive();
 ```
 
-### Adaptive (Standard)
-- Intelligente Analyse und Strategie-Auswahl
-- Balance zwischen Conservative und Aggressive
-- Beste Wahl für unbekannte Eingaben
+### Adaptive (Default)
+- Intelligent analysis and strategy selection
+- Balance between Conservative and Aggressive
+- Best choice for unknown inputs
 
 ```typescript
 const recipe = RecipeTemplates.adaptive();
@@ -83,43 +83,43 @@ const recipe = RecipeTemplates.adaptive();
 
 ## Custom Recipes
 
-### Beispiel 1: Einfaches Custom Recipe
+### Example 1: Simple Custom Recipe
 
 ```typescript
 import { Recipe, Conditions, Fixers } from './recipe-system';
 
 const customRecipe = Recipe.create('my-recipe', 'Custom JSON Cleaner')
   .checkpoint('start')
-  
+
   // Conditional fixing
   .when(Conditions.hasControlChars())
     .use(Fixers.controlCharacter())
-    
+
   .when(Conditions.hasMissingCommas())
     .use(Fixers.missingComma())
-    
+
   .validate()
   .build();
 ```
 
-### Beispiel 2: Mit Rollback
+### Example 2: With Rollback
 
 ```typescript
 const safeRecipe = Recipe.create('safe-recipe', 'Safe with Rollback')
   .checkpoint('original')
-  
+
   .use(Fixers.missingComma())
   .validate()
-  
-  // Bei Fehler: zurück zum Original
+
+  // On error: rollback to original
   .when(Conditions.isInvalid())
     .rollbackTo('original')
     .use(Fixers.structuralRepair())
-    
+
   .build();
 ```
 
-### Beispiel 3: Parallele Versuche (tryBest)
+### Example 3: Parallel Attempts (tryBest)
 
 ```typescript
 const parallelRecipe = Recipe.create('parallel', 'Try Multiple Approaches')
@@ -132,38 +132,38 @@ const parallelRecipe = Recipe.create('parallel', 'Try Multiple Approaches')
   .build();
 ```
 
-## Verfügbare Detektoren
+## Available Detectors
 
 ```typescript
 import { Detectors } from './recipe-system';
 
-// Alle verfügbaren Detektoren:
+// All available detectors:
 Detectors.controlCharacter()  // \n, \t, etc.
-Detectors.missingComma()      // Fehlende Kommas
-Detectors.structural()        // Unbalancierte Brackets
+Detectors.missingComma()      // Missing commas
+Detectors.structural()        // Unbalanced brackets
 Detectors.markdownBlock()     // ```json...```
 Detectors.thinkTag()          // <think>...</think>
 ```
 
-## Verfügbare Fixer
+## Available Fixers
 
 ```typescript
 import { Fixers } from './recipe-system';
 
-// Alle verfügbaren Fixer:
-Fixers.controlCharacter()      // Escaped Control Chars
-Fixers.missingComma()          // Fügt fehlende Kommas ein
-Fixers.markdownExtractor()     // Extrahiert aus Markdown
-Fixers.thinkTagExtractor()     // Extrahiert aus Think-Tags
-Fixers.structuralRepair()      // Repariert Brackets
+// All available fixers:
+Fixers.controlCharacter()      // Escape control chars
+Fixers.missingComma()          // Insert missing commas
+Fixers.markdownExtractor()     // Extract from Markdown
+Fixers.thinkTagExtractor()     // Extract from Think-Tags
+Fixers.structuralRepair()      // Repair brackets
 ```
 
-## Conditions (Bedingungen)
+## Conditions
 
 ```typescript
 import { Conditions } from './recipe-system';
 
-// Einfache Conditions:
+// Simple conditions:
 Conditions.hasDetection('control_character')
 Conditions.isValid()
 Conditions.isInvalid()
@@ -172,38 +172,38 @@ Conditions.hasMissingCommas()
 Conditions.hasMarkdownCode()
 Conditions.hasThinkTags()
 
-// Kombinierte Conditions:
+// Combined conditions:
 Conditions.and(...conditions)
 Conditions.or(...conditions)
 Conditions.not(condition)
 
-// Threshold-basiert:
+// Threshold-based:
 Conditions.confidenceAbove(0.8)
 Conditions.changesBelow(10)
 Conditions.timeElapsed(5000)
 ```
 
-## Analyse und Validierung
+## Analysis and Validation
 
 ```typescript
 import { JsonCleanerFactory } from './recipe-system';
 
-// Analysiere JSON und erhalte Empfehlung
+// Analyze JSON and get recommendation
 const analysis = JsonCleanerFactory.analyzeJson(malformedJson);
-console.log('Empfohlenes Recipe:', analysis.recommendedRecipe);
-console.log('Gefundene Probleme:', analysis.detectedIssues);
-console.log('Schwierigkeit:', analysis.estimatedDifficulty);
+console.log('Recommended recipe:', analysis.recommendedRecipe);
+console.log('Detected issues:', analysis.detectedIssues);
+console.log('Difficulty:', analysis.estimatedDifficulty);
 
-// Nur Validierung ohne Cleaning
+// Validation only, no cleaning
 const validation = JsonCleanerFactory.validateJson(json);
-console.log('Ist valide:', validation.isValid);
-console.log('Fehler:', validation.error);
-console.log('Vorschläge:', validation.suggestions);
+console.log('Is valid:', validation.isValid);
+console.log('Error:', validation.error);
+console.log('Suggestions:', validation.suggestions);
 ```
 
-## Metriken und Debugging
+## Metrics and Debugging
 
-Jedes Cleaning-Result enthält detaillierte Metriken:
+Each cleaning result contains detailed metrics:
 
 ```typescript
 const result = await engine.clean(json, recipe);
@@ -232,17 +232,17 @@ recipe-system/
 ├── types/              # TypeScript Interfaces
 │   ├── operation.types.ts
 │   └── recipe.types.ts
-├── core/              # Kern-Komponenten
+├── core/              # Core Components
 │   ├── cleaning-context.ts
 │   ├── cleaning-engine.ts
 │   ├── cleaning-recipe.ts
 │   ├── recipe-builder.ts
 │   ├── recipe-steps.ts
 │   └── conditions.ts
-├── operations/        # Detektoren & Fixer
+├── operations/        # Detectors & Fixers
 │   ├── detectors.ts
 │   └── fixers.ts
-├── recipes/          # Vordefinierte Templates
+├── recipes/          # Predefined Templates
 │   └── templates.ts
 ├── factory.ts        # Convenience Factory
 └── index.ts          # Barrel Export
@@ -250,69 +250,69 @@ recipe-system/
 
 ## Testing
 
-Unit Tests im Verzeichnis `tests/unit/json-cleaner/`:
+Unit tests in `tests/unit/json-cleaner/` directory:
 
 ```bash
 npm run test:unit
 ```
 
-Tests decken ab:
-- ✅ Conservative Recipe mit validem JSON
-- ✅ Markdown-Extraktion
-- ✅ Think-Tag-Extraktion
-- ✅ Missing Comma Fixes
-- ✅ Structural Repair
+Tests cover:
+- ✅ Conservative recipe with valid JSON
+- ✅ Markdown extraction
+- ✅ Think-Tag extraction
+- ✅ Missing comma fixes
+- ✅ Structural repair
 
-## Migration vom Legacy System
+## Migration from Legacy System
 
-Das neue Recipe-System ist bereits in `JsonCleanerService` integriert:
+The new Recipe System is already integrated in `JsonCleanerService`:
 
 ```typescript
-// Neue async Methode (nutzt Recipe-System mit Fallback)
+// New async method (uses Recipe System)
 const result = await JsonCleanerService.processResponseAsync(json);
 
-// Legacy sync Methode (unverändert, für Kompatibilität)
+// Legacy sync method (for backwards compatibility)
 const result = JsonCleanerService.processResponse(json);
 ```
 
-Bei Migration zu `processResponseAsync`:
-- Automatische Recipe-Auswahl
-- Bessere Fehlerbehandlung
-- Detailliertere Metriken
-- Fallback zu Legacy-System bei Problemen
+Benefits of migrating to `processResponseAsync`:
+- Automatic recipe selection
+- Better error handling
+- More detailed metrics
+- Fallback to legacy system if problems occur
 
 ## Best Practices
 
-1. **Verwende `processResponseAsync()` für neue Code**
-   - Nutzt modernes Recipe-System
-   - Fallback zu Legacy garantiert
+1. **Use `processResponseAsync()` for new code**
+   - Uses modern Recipe System
+   - Legacy fallback guaranteed
 
-2. **Quick Clean für einfache Fälle**
+2. **Quick Clean for simple cases**
    ```typescript
    const result = await JsonCleanerFactory.quickClean(json);
    ```
 
-3. **Custom Recipes für spezielle Use Cases**
-   - Wiederverwendbare Cleaning-Logik
-   - Projekt-spezifische Anforderungen
+3. **Custom Recipes for special use cases**
+   - Reusable cleaning logic
+   - Project-specific requirements
 
-4. **Metriken überwachen**
-   - Confidence-Level beachten
-   - Quality-Metriken tracken
-   - Bei niedriger Confidence: aggressiveres Recipe
+4. **Monitor metrics**
+   - Watch confidence levels
+   - Track quality metrics
+   - Low confidence → use more aggressive recipe
 
-5. **Checkpoints nutzen**
-   - Für experimentelle Fixer
-   - Zum sicheren Rollback
+5. **Use checkpoints**
+   - For experimental fixers
+   - For safe rollback
 
-## Nächste Schritte
+## Next Steps
 
-- [ ] Integration Tests schreiben
-- [ ] Performance Benchmarks
-- [ ] Dokumentation erweitern
-- [ ] Weitere Custom Recipes für spezifische Use Cases
-- [ ] Migration Guide für bestehende Projekte
+- [ ] Write integration tests
+- [ ] Performance benchmarks
+- [ ] Expand documentation
+- [ ] Additional custom recipes for specific use cases
+- [ ] Migration guide for existing projects
 
 ## Credits
 
-Migriert von `scribomate-backend/temp_recipe_files` mit Verbesserungen und Anpassungen für ollama-middleware.
+Developed for the ollama-middleware project to provide robust JSON cleaning capabilities for LLM responses.
