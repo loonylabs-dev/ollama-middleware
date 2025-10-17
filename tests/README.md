@@ -1,69 +1,120 @@
 # Ollama Middleware Test Suite
 
-This directory contains comprehensive test suites for validating all aspects of the Ollama Middleware system, from individual components to complete end-to-end workflows.
+Complete testing documentation for all test categories, from unit tests to end-to-end workflows.
+
+## 📋 Quick Reference
+
+| Test Command | Category | Ollama Required | Description |
+|-------------|----------|----------------|-------------|
+| `npm run test:unit` | Unit | ❌ No | Jest unit tests (114 tests) |
+| `npm run test:unit:watch` | Unit | ❌ No | Jest watch mode for development |
+| `npm run test:unit:coverage` | Unit | ❌ No | Jest with coverage report |
+| `npm run test:basic` | Component | ❌ No | Basic middleware services validation |
+| `npm run test:integration` | Integration | ❌ No | FlatFormatter system tests |
+| `npm run test:integration:parameters` | Integration | ✅ Yes | Token limiting & parameter config |
+| `npm run test:robustness` | Robustness | ❌ No | JSON cleaning & error handling |
+| `npm run test:e2e` | E2E | ✅ Yes | Complete workflow with Ollama API |
+| `npm run test:manual:smoke` | Manual | ✅ Yes | Smoke test with real Ollama API |
+| `npm run test:manual:verify-params` | Manual | ✅ Yes | Parameter verification test |
+| `npm run test:manual:formatter-demo` | Manual | ❌ No | RequestFormatter demo |
+| `npm run test:manual:story-test` | Manual | ✅ Yes | Story generator use case demo |
+| `npm run test:all` | Suite | ❌ No | All automated tests (excludes E2E) |
+| `npm run test:ci` | CI/CD | ❌ No | CI-optimized Jest tests |
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+1. **Build the middleware first** (required for ALL tests):
+   ```bash
+   npm run build
+   ```
+
+2. **For tests that require Ollama** (marked with ✅ above):
+   ```bash
+   # Start Ollama server
+   ollama serve
+
+   # Set MODEL1_NAME in your .env file
+   echo "MODEL1_NAME=phi3:mini" >> .env
+
+   # Pull the model (if not already installed)
+   ollama pull phi3:mini
+   ```
+
+### Run All Tests
+
+```bash
+# Run all automated tests (no Ollama required)
+npm run test:all
+
+# Run ALL tests including E2E (Ollama required)
+npm run test:all && npm run test:e2e
+```
+
+---
 
 ## 📁 Test Structure
 
 ```
 /tests
 ├── /unit              # Jest unit tests (TypeScript)
-│   ├── /utils         # Utility class unit tests
-│   │   ├── control-char-diagnostics.test.ts
-│   │   ├── memory-management.test.ts
-│   │   └── validation.test.ts
-│   └── /json-cleaner  # Recipe system unit tests
-│       ├── cleaning-engine.conservative.valid.test.ts
-│       ├── cleaning-engine.markdown.extract.test.ts
-│       ├── cleaning-engine.thinktag.extract.test.ts
-│       ├── cleaning-engine.missing-comma.test.ts
-│       └── cleaning-engine.structural-repair.test.ts
-├── /manual            # Manual/interactive test scripts (TypeScript)
-│   └── smoke-test.ts
+│   ├── /config        # Configuration validation tests
+│   ├── /constants     # JSON formatting constants tests
+│   ├── /json-cleaner  # Recipe system unit tests
+│   ├── /messages      # Message template tests
+│   ├── /services      # Service layer tests
+│   └── /utils         # Utility function tests
 ├── /basic             # Component-level tests (JavaScript)
 │   └── test-middleware.js
 ├── /integration       # Integration tests (JavaScript)
-│   └── test-flat-formatter.js
-├── /robustness        # Error handling & resilience tests (JavaScript)
+│   ├── test-flat-formatter.js
+│   └── test-parameter-limits.js
+├── /robustness        # Error handling tests (JavaScript)
 │   └── test-json-handling.js
-├── /e2e               # End-to-end workflow tests (JavaScript)
+├── /e2e               # End-to-end tests (JavaScript)
 │   └── test-workflow.js
-├── /fixtures          # Test data files
-│   ├── malformed-json.json
-│   └── test-characters.json
+├── /manual            # Manual/interactive tests (TypeScript/JavaScript)
+│   ├── smoke-test.ts
+│   ├── verify-parameters.js
+│   ├── request-formatter-demo.ts
+│   └── story-generator-test.ts
 └── /utils             # Test helper utilities
     └── test-helpers.js
 ```
 
-## 📋 Test Categories
+---
 
-### 🧪 Unit Tests (`unit/`)
-**Jest-based TypeScript unit tests for individual utilities and classes**
-- **Location**: `tests/unit/`
-- **Framework**: Jest + ts-jest
-- **Purpose**: Fast, isolated tests for utility functions and classes
-- **Tests Included**:
-  - **Utils Tests**:
-    - `utils/control-char-diagnostics.test.ts` - Control character detection and repair
-    - `utils/memory-management.test.ts` - Memory usage utilities
-    - `utils/validation.test.ts` - Validation helper functions
-  - **Recipe System Tests**:
-    - `json-cleaner/cleaning-engine.conservative.valid.test.ts` - Conservative recipe with valid JSON
-    - `json-cleaner/cleaning-engine.markdown.extract.test.ts` - Markdown code block extraction
-    - `json-cleaner/cleaning-engine.thinktag.extract.test.ts` - Think tag extraction
-    - `json-cleaner/cleaning-engine.missing-comma.test.ts` - Missing comma repair
-    - `json-cleaner/cleaning-engine.structural-repair.test.ts` - Structural bracket repair
-  - **Configuration Tests**:
-    - `config/model-config-validation.test.ts` - Model configuration validation and error handling
-  - **Message Pattern Tests**:
-    - `constants/json-formatting.constants.test.ts` - JSON formatting utility functions
-    - `messages/message-templates.test.ts` - Message template validation for use cases
+## 📊 Test Categories
 
-**Expected Results**: All unit tests should pass (83+ tests) with 70%+ code coverage
-- JSON Formatting Constants: 25 tests validating utility functions
-- Message Templates: 26 tests validating system/user message templates
-- Model Configuration: 6 tests validating configuration and error handling
+### 🧪 Unit Tests (`npm run test:unit`)
 
-**Run Command**:
+**Framework**: Jest + ts-jest
+**Location**: `tests/unit/`
+**Ollama Required**: ❌ No
+**Duration**: ~5 seconds
+
+**What's tested**:
+- JSON Formatting Constants (25 tests)
+- Message Templates (26 tests)
+- Model Configuration Validation (6 tests)
+- Data Flow Logger (9 tests)
+- Request Formatter Service (21 tests)
+- Memory Management Utils (4 tests)
+- Control Character Diagnostics (11 tests)
+- Validation Utils (12 tests)
+- JSON Cleaner Recipe System (5 tests)
+
+**Expected Results**:
+```
+Test Suites: 13 passed, 13 total
+Tests:       114 passed, 114 total
+Coverage:    70%+ (lines, functions, branches, statements)
+```
+
+**Run Commands**:
 ```bash
 npm run test:unit              # Run all unit tests
 npm run test:unit:watch        # Watch mode for development
@@ -72,306 +123,335 @@ npm run test:unit:coverage     # With coverage report
 
 ---
 
-### 🔧 Basic Tests (`basic/`)
-**Component-level validation of individual services**
-- **File**: `test-middleware.js`
-- **Purpose**: Validates core middleware services in isolation
-- **Services Tested**:
-  - RequestFormatterService
-  - TokenEstimatorService  
-  - ModelParameterManagerService
-  - ResponseProcessorService
-  - JsonCleanerService
-  - FlatFormatter System
+### 🔧 Basic Component Tests (`npm run test:basic`)
 
-**Expected Results**: All 6 service components should pass validation
+**File**: `tests/basic/test-middleware.js`
+**Ollama Required**: ❌ No
+**Duration**: <1 second
 
----
+**What's tested**:
+1. RequestFormatterService - Prompt validation and statistics
+2. TokenEstimatorService - Token estimation and text stats
+3. ModelParameterManagerService - Parameter merging and validation
+4. ResponseProcessorService - Thinking/content extraction
+5. JsonCleanerService - JSON repair and cleaning
+6. FlatFormatter System - Data formatting and presets
 
-### 🚀 End-to-End Tests (`e2e/`)
-**Complete workflow validation with real Ollama integration**
-- **File**: `test-workflow.js`
-- **Purpose**: Tests the complete pipeline from request to parsed response
-- **Workflow Tested**: 
-  ```
-  Request → UseCase → FlatFormatter → Ollama API → JSON Cleaning → Parsed Result
-  ```
-- **Features Validated**:
-  - CharacterGeneratorUseCase implementation
-  - Complex context building with FlatFormatter
-  - Real Ollama API communication
-  - JSON response processing and repair
-  - Error handling and logging
+**Expected Results**: All 6 services show ✅ status
 
-**Prerequisites**: 
-- ✅ Ollama server running (`ollama serve`)
-- ✅ Model available (configured in MODEL1_NAME env variable)
+**Example Output**:
+```
+🧪 Testing Ollama Middleware Foundation...
 
-**Expected Results**: Complete workflow execution (fails gracefully if Ollama unavailable)
+1. Testing RequestFormatterService...
+   ✅ Prompt validation: true
+   ✅ Prompt stats: 58 chars, 8 words
+
+2. Testing TokenEstimatorService...
+   ✅ Token estimation: 11 tokens (GPT)
+   ...
+```
 
 ---
 
-### 🛡️ Robustness Tests (`robustness/`)
-**Malformed JSON handling and extreme error scenarios**
-- **File**: `test-json-handling.js`
-- **Purpose**: Validates system resilience with problematic inputs
-- **Scenarios Tested**:
-  - 10 types of malformed JSON (missing commas, control chars, etc.)
-  - Response processor edge cases (think tags, markdown, mixed content)
-  - 6 extreme error scenarios (empty responses, HTML errors, undefined values)
-  - Performance with large/complex data structures
+### 🚀 Integration Tests
+
+#### FlatFormatter System (`npm run test:integration`)
+
+**File**: `tests/integration/test-flat-formatter.js`
+**Ollama Required**: ❌ No
+**Duration**: <1 second
+
+**What's tested**:
+1. Basic FlatFormatter functionality
+2. FormatConfigurator with advanced options
+3. Character/Genre/Chapter presets
+4. Array slicing functionality
+5. LLMContextBuilder integration
+6. Error handling and null safety
+
+**Expected Results**: All 7 tests complete successfully
+
+---
+
+#### Parameter Limits (`npm run test:integration:parameters`)
+
+**File**: `tests/integration/test-parameter-limits.js`
+**Ollama Required**: ✅ Yes
+**Duration**: ~30-60 seconds (5 API calls)
+
+**What's tested**:
+- Token limiting via `num_predict` parameter
+- Parameter application at use-case level
+- Output validation and character counting
+- TweetGeneratorUseCase (280 character limit)
+
+**Test Scenarios**:
+- 5 different topics
+- Character count validation
+- Performance metrics
+- Success rate calculation
 
 **Expected Results**:
-- JSON Cleaning: 80%+ success rate
-- Response Processing: 100% success rate  
-- Error Handling: 100% graceful handling
-- Performance: <50ms for large JSON processing
+```
+📊 TEST SUMMARY
+Total Tests: 5
+✅ Passed: 5 (100%)
+❌ Failed: 0 (0%)
+
+📈 Character Count Statistics:
+   Average: 250 characters
+   Target Limit: 280 characters
+
+🎉 ALL TESTS PASSED! Parameter limiting works correctly.
+```
+
+**Prerequisites**:
+- Ollama server running (`ollama serve`)
+- MODEL1_NAME configured in `.env`
+- Model supports parameter configuration
 
 ---
 
-### 🎨 Integration Tests (`integration/`)
-**FlatFormatter system and preset functionality**
-- **File**: `test-flat-formatter.js`
-- **Purpose**: Validates data formatting for LLM consumption
-- **Components Tested**:
-  - FlatFormatter core functionality
-  - FormatConfigurator advanced options
-  - Character, Genre, Chapter presets
-  - LLMContextBuilder integration
-  - Array slicing and computed fields
-  - Null safety and error handling
+### 🛡️ Robustness Tests (`npm run test:robustness`)
 
-**Expected Results**: All formatting operations should complete successfully
+**File**: `tests/robustness/test-json-handling.js`
+**Ollama Required**: ❌ No
+**Duration**: ~2-3 seconds
+
+**What's tested**:
+1. **Malformed JSON Cleaning** (10 scenarios)
+   - Missing commas
+   - Trailing commas
+   - Unescaped quotes
+   - Control characters
+   - Missing braces
+   - Extra text/think tags
+   - Multiple JSON objects
+   - Complex nested errors
+
+2. **Response Processor** (4 scenarios)
+   - Thinking tag extraction
+   - Markdown formatting
+   - Plain JSON responses
+   - Extra text handling
+
+3. **Error Scenarios** (6 extreme cases)
+   - Empty responses
+   - HTML errors
+   - Undefined values
+   - Invalid JSON
+   - Whitespace-only
+   - Function calls in JSON
+
+4. **Control Character Diagnostics** (10 tests)
+   - Unescaped newlines/tabs
+   - Multiple control chars
+   - Nested structures
+   - Unicode handling
+   - LLM response patterns
+
+5. **Performance Testing**
+   - Large JSON processing (>10KB)
+   - Processing speed metrics
+
+**Expected Results**:
+```
+🏆 FINAL ROBUSTNESS REPORT
+📋 JSON Cleaning: 80%+ success rate
+🔍 Response Processing: 90-100% success rate
+💥 Error Handling: 100% graceful handling
+⚡ Performance: <50ms for large JSON
+
+🎯 OVERALL ROBUSTNESS: 85-95%
+✅ Ready for production use with real AI models
+```
 
 ---
 
-### 🛠️ Manual Tests (`manual/`)
-**Interactive TypeScript test scripts for manual validation**
-- **Location**: `tests/manual/`
-- **Purpose**: Hands-on testing with real services and APIs
-- **Tests Included**:
-  - `smoke-test.ts` - Quick validation of core features with real Ollama API
+### 🎯 End-to-End Tests (`npm run test:e2e`)
 
-**Smoke Test Features**:
-- Memory management utilities
-- Control character diagnostics
-- Data flow logger
-- Real Ollama API call with gemma3:4b
-- Log file verification
-- Enhanced logging features validation
+**File**: `tests/e2e/test-workflow.js`
+**Ollama Required**: ✅ Yes
+**Duration**: ~10-30 seconds (1 API call)
 
-**Prerequisites for Smoke Test**:
-- ✅ Ollama server running (`ollama serve`)
-- ✅ Model configured in .env: MODEL1_NAME=your-model (e.g., phi3:mini, gemma2:2b)
-- ✅ Environment configured (`.env` file with MODEL1_NAME, MODEL1_URL, MODEL1_TOKEN)
+**What's tested**:
+- Complete workflow: Request → UseCase → Ollama → JSON Cleaning → Result
+- CharacterGeneratorUseCase implementation
+- Context building with FlatFormatter
+- Real Ollama API communication
+- JSON response processing and repair
+- Error handling and logging
 
-**Run Command**:
+**Prerequisites**:
+- Ollama server running (`ollama serve`)
+- MODEL1_NAME configured in `.env`
+- Model pulled and available
+
+**Expected Results**:
+```
+🧪 End-to-End Workflow Test
+
+Testing complete pipeline from request to parsed result...
+   ✅ UseCase initialized
+   ✅ Ollama API call successful
+   ✅ Response received (150 tokens)
+   ✅ JSON extracted and parsed
+   ✅ Character object validated
+
+🎉 E2E workflow complete - all components working together!
+```
+
+---
+
+### 🛠️ Manual Tests
+
+#### Smoke Test (`npm run test:manual:smoke`)
+
+**File**: `tests/manual/smoke-test.ts`
+**Ollama Required**: ✅ Yes
+**Duration**: ~10-15 seconds
+
+**What's tested**:
+1. Memory management utilities
+2. Control character diagnostics
+3. Data flow logger
+4. Real Ollama API call
+5. Log file verification
+6. Enhanced logging features
+
+**Expected Results**: All 4 component checks pass + real API response
+
+---
+
+#### Parameter Verification (`npm run test:manual:verify-params`)
+
+**File**: `tests/manual/verify-parameters.js`
+**Ollama Required**: ✅ Yes
+**Duration**: ~5-10 seconds
+
+**What it does**:
+- Generates ONE tweet
+- Shows exact request details
+- Verifies parameter passing to Ollama
+- Displays expected vs actual parameters
+- Provides verification instructions
+
+**Use Case**: Quick check to verify parameters are being passed correctly to Ollama
+
+**Example Output**:
+```
+🔍 Parameter Verification Test
+
+📝 Topic: "The importance of clean code"
+✅ Generation Complete!
+
+📊 RESULT:
+Tweet: "Clean code is the foundation of maintainable software..."
+Character Count: 267/280
+Within Limit: ✓ YES
+
+🔍 EXPECTED PARAMETERS IN REQUEST:
+  num_predict: 70
+  temperature: 0.7
+  repeat_penalty: 1.3
+  ...
+
+💡 VERIFICATION STEPS:
+1. Check the latest Ollama log file in: logs/ollama/requests/
+2. Look for the "options" object in the request JSON
+3. Verify that all parameters above are present
+```
+
+---
+
+#### Request Formatter Demo (`npm run test:manual:formatter-demo`)
+
+**File**: `tests/manual/request-formatter-demo.ts`
+**Ollama Required**: ❌ No
+**Duration**: <1 second
+
+**What it demonstrates**:
+1. RequestFormatterService with complex prompts
+2. FlatFormatter simple usage
+3. Different formatting options
+4. Context and instruction separation
+
+**Use Case**: Understanding how RequestFormatterService works with different prompt structures
+
+---
+
+#### Story Generator Test (`npm run test:manual:story-test`)
+
+**File**: `tests/manual/story-generator-test.ts`
+**Ollama Required**: ✅ Yes
+**Duration**: ~30-60 seconds (3 API calls)
+
+**What it demonstrates**:
+1. **Simple string prompt**
+   - Direct string message
+   - Basic story generation
+
+2. **Complex context + instruction**
+   - Structured context object
+   - Genre, tone, constraints
+   - Formatted instruction
+   - Context extraction
+
+3. **Nested prompt structure**
+   - Nested prompt.prompt structure
+   - RequestFormatterService handling
+
+**Use Case**: Complete example of RequestFormatterService in action with real API calls
+
+---
+
+## ⚠️ Common Issues and Solutions
+
+### "Cannot find module './dist/middleware/services'"
+
+**Cause**: Project not built or outdated build
+**Solution**:
 ```bash
-npm run test:manual:smoke      # Run smoke test
+npm run build
 ```
+
+### "ECONNREFUSED 127.0.0.1:11434"
+
+**Cause**: Ollama server not running
+**Solution**:
+```bash
+ollama serve
+```
+
+### "Model not found"
+
+**Cause**: MODEL1_NAME not set or model not installed
+**Solution**:
+```bash
+# Set in .env
+echo "MODEL1_NAME=phi3:mini" >> .env
+
+# Pull model
+ollama pull phi3:mini
+```
+
+### Tests fail with "require is not defined"
+
+**Cause**: TypeScript files not compiled
+**Solution**:
+```bash
+npm run build
+```
+
+### JSON Cleaning below 70% success rate
+
+**Cause**: Some extreme cases are designed to fail
+**Note**: 70-90% success rate is normal and expected
 
 ---
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-1. **Build the middleware**:
-   ```bash
-   npm run build
-   ```
-
-2. **For E2E tests only** - Start Ollama (optional):
-   ```bash
-   # Start Ollama server
-   ollama serve
-   
-   # Pull a model (use the one configured in your MODEL1_NAME)
-   ollama pull phi3:mini
-   # or any other model you prefer
-   ```
-
-### Running Tests
-
-```bash
-# Run all automated test suites
-npm run test:all
-
-# Run individual test categories
-npm run test:unit              # Jest unit tests
-npm run test:unit:watch        # Watch mode
-npm run test:unit:coverage     # With coverage
-npm run test:basic             # Component tests
-npm run test:integration       # FlatFormatter tests
-npm run test:robustness        # JSON/Error handling tests
-npm run test:e2e               # End-to-end tests (requires Ollama)
-
-# Run manual/interactive tests
-npm run test:manual:smoke      # Smoke test with real API
-
-# Manual execution (alternative)
-cd tests
-node basic/test-middleware.js
-node integration/test-flat-formatter.js  
-node robustness/test-json-handling.js
-node e2e/test-workflow.js
-```
-
-## 📊 Test Results Interpretation
-
-### ✅ Success Indicators
-
-**Unit Tests**:
-- All Jest tests pass (33+ tests including Recipe System)
-- 70%+ code coverage achieved
-- No type errors or import issues
-- Recipe System tests validate:
-  - Conservative recipe with valid JSON
-  - Markdown extraction (```json...```)
-  - Think tag extraction (<think>...</think>)
-  - Missing comma fixes
-  - Structural repairs (unbalanced brackets)
-
-**Basic Tests**:
-- All 6 services show "✅" status
-- No import or execution errors
-
-**Integration Tests**:
-- FlatFormatter operations complete without errors
-- Presets generate expected output formats
-- Null safety handling works correctly
-
-**Robustness Tests**:
-- JSON Cleaning: 70-90% success rate (normal)
-- Response Processing: 90-100% success rate
-- Error Handling: 100% graceful handling (no crashes)
-- Performance: Processing speeds >100k chars/second
-
-**E2E Tests**:
-- Complete workflow executes to Ollama connection
-- Context building with FlatFormatter succeeds
-- JSON schema and system message properly formatted
-- Graceful handling of connection issues
-
-**Manual Smoke Test**:
-- All 4 component checks pass (Memory, ControlChar, Logger, Ollama)
-- Real Ollama API responds successfully
-- Log files created with enhanced data
-- Response metrics captured
-
-### ⚠️ Common Issues and Solutions
-
-**"ECONNREFUSED 127.0.0.1:11434"** (E2E Tests):
-- **Cause**: Ollama server not running
-- **Solution**: Start Ollama with `ollama serve`
-- **Note**: This is expected behavior if Ollama is not available
-
-**"Model not found"** (E2E Tests):
-- **Cause**: MODEL1_NAME env variable not set or model not installed
-- **Solution**: Set MODEL1_NAME in .env and pull model with `ollama pull <model-name>`
-- **Example**: `MODEL1_NAME=phi3:mini` and `ollama pull phi3:mini`
-
-**JSON Cleaning below 70% success rate** (Robustness):
-- **Cause**: Possible regression in JSON repair strategies
-- **Investigation**: Check specific failing cases in test output
-- **Normal**: Some extreme cases are designed to fail
-
-**TypeScript compilation errors**:
-- **Cause**: Middleware not built or build outdated
-- **Solution**: Run `npm run build` before testing
-
-## 🔬 Test Data and Fixtures
-
-### Fixture Files (`fixtures/`)
-- `malformed-json.json` - Collection of problematic JSON samples
-- `test-characters.json` - Sample character data for testing
-- `test-settings.json` - Sample story settings
-- `error-scenarios.json` - Extreme error case definitions
-
-### Test Utilities (`utils/`)
-- `test-helpers.js` - Shared utility functions
-- `mock-data.js` - Test data generators
-- `validators.js` - Result validation functions
-
-## 🏗️ Adding New Tests
-
-### Creating a New Test Category
-
-1. **Create directory**: `tests/new-category/`
-2. **Add test file**: `test-new-feature.js`
-3. **Update package.json**: Add `test:new-category` script
-4. **Document**: Add section to this README
-
-### Test File Structure
-
-```javascript
-// Test header with description
-console.log('🧪 Testing [Feature Name]...\n');
-
-// Test configuration
-const TEST_CONFIG = {
-  // Configuration options
-};
-
-// Individual test functions
-async function testFeatureA() {
-  console.log('Testing Feature A...');
-  // Test implementation
-}
-
-// Main execution function
-async function main() {
-  try {
-    await testFeatureA();
-    // More tests...
-    
-    console.log('\n✅ All tests passed!');
-  } catch (error) {
-    console.log('\n❌ Tests failed:', error.message);
-  }
-}
-
-main().catch(console.error);
-```
-
-### Best Practices
-
-1. **Clear Output**: Use emojis and consistent formatting
-2. **Error Handling**: Always catch and report errors gracefully
-3. **Performance**: Measure and report timing for slow operations
-4. **Isolation**: Tests should not depend on external state
-5. **Documentation**: Explain what each test validates
-
-## 📈 Continuous Integration
-
-### GitHub Actions Integration
-
-```yaml
-# .github/workflows/test.yml
-name: Test Suite
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-      - run: npm install
-      - run: npm run build
-      - run: npm run test:basic
-      - run: npm run test:integration
-      - run: npm run test:robustness
-      # E2E tests require Ollama server setup
-```
-
-### Test Coverage Goals
-
-- **Basic Tests**: 100% pass rate
-- **Integration Tests**: 100% pass rate  
-- **Robustness Tests**: 80%+ overall robustness score
-- **E2E Tests**: Complete workflow execution (connection optional)
-
-## 🛠️ Development Workflow
+## 🔬 Development Workflow
 
 ### Before Committing
 ```bash
@@ -389,25 +469,61 @@ npm run test:e2e           # E2E with Ollama running
 npm run test:manual:smoke  # Manual smoke test
 ```
 
-### Performance Monitoring
-- Track JSON cleaning success rates over time
-- Monitor processing speeds for performance regressions
-- Watch for new error patterns in robustness tests
+### Adding New Tests
 
-## 🤝 Contributing
+1. **Create test file** in appropriate directory
+2. **Add npm script** to `package.json`
+3. **Document in this README**:
+   - Add to Quick Reference table
+   - Create detailed section
+   - Document prerequisites
+   - Specify expected results
+4. **Update `test:all`** if applicable
 
-When adding new features to the middleware:
+---
 
-1. **Add corresponding tests** in appropriate category
-2. **Update fixtures** if new test data is needed  
-3. **Document expected results** in this README
-4. **Run full test suite** before submitting PR
+## 📈 Continuous Integration
+
+For CI/CD pipelines, use:
+
+```bash
+npm run test:ci  # Jest with CI optimization
+```
+
+This runs unit tests with:
+- `--runInBand` (sequential execution)
+- `--ci` (optimized for CI environments)
+- `--coverage` (generates coverage reports)
+
+**Note**: E2E tests requiring Ollama should be separate CI jobs with Ollama server setup.
+
+---
 
 ## 📞 Support
 
 If tests consistently fail:
 
-1. **Check prerequisites** (Node version, build status, Ollama availability)
-2. **Review test output** for specific error messages
-3. **Consult troubleshooting** section above
-4. **Open issue** with test output and environment details
+1. ✅ **Check prerequisites** (Node version, build status, Ollama availability)
+2. ✅ **Review test output** for specific error messages
+3. ✅ **Consult troubleshooting** section above
+4. ✅ **Open issue** with test output and environment details
+
+---
+
+## 🎯 Test Coverage Goals
+
+- **Unit Tests**: 70%+ code coverage
+- **Basic Tests**: 100% pass rate
+- **Integration Tests**: 100% pass rate
+- **Robustness Tests**: 80%+ overall robustness score
+- **E2E Tests**: Complete workflow execution (connection optional)
+
+---
+
+<div align="center">
+
+**Happy Testing! 🧪**
+
+Made with ❤️ for robust middleware
+
+</div>

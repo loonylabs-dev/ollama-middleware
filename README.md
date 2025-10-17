@@ -247,43 +247,30 @@ src/
 - [Examples](docs/EXAMPLES.md)
 - [CHANGELOG](CHANGELOG.md) - Release notes and breaking changes
 
-## 🧪 Testing and Examples
+## 🧪 Testing
 
-### 🏃‍♂️ Run Built-in Tests
+The middleware includes comprehensive test suites covering unit tests, integration tests, robustness tests, and end-to-end workflows.
 
-The middleware includes comprehensive test suites:
+### Quick Start
 
 ```bash
-# Build the middleware
+# Build the middleware first
 npm run build
 
-# Test basic components
-node test-middleware.js
+# Run all automated tests
+npm run test:all
 
-# Test complete End-to-End workflow  
-node test-e2e-workflow.js
-
-# Test robustness and error handling
-node test-robustness.js
-
-# Test FlatFormatter system
-node test-flat-formatter.js
-
-# Test parameter limits and token control
-node tests/integration/test-parameter-limits.js
+# Run unit tests only
+npm run test:unit
 ```
 
-<details>
-<summary><strong>📊 Test Results Summary</strong></summary>
+**📖 For complete testing documentation**, see **[tests/README.md](tests/README.md)**
 
-- ✅ **Component Tests**: All services working (JSON Cleaner, Response Processor, etc.)
-- ✅ **E2E Workflow**: Complete pipeline from request to parsed result
-- ✅ **JSON Robustness**: 80% success rate on malformed JSON repair
-- ✅ **Error Handling**: 100% graceful handling of extreme scenarios
-- ✅ **Performance**: Large JSON processing at 1.1M chars/second
-- ✅ **Parameter Limits**: Token limiting successfully controls output length
-
-</details>
+The test documentation includes:
+- 📋 Quick reference table for all tests
+- 🚀 Detailed test descriptions and prerequisites
+- ⚠️ Troubleshooting guide
+- 🔬 Development workflow best practices
 
 ### 🐦 Tweet Generator Example
 

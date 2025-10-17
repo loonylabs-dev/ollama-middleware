@@ -6,7 +6,7 @@ const {
   characterPreset,
   genrePreset,
   chapterPreset
-} = require('./dist/middleware/services');
+} = require('../../dist/middleware/services');
 
 console.log('🧪 Testing FlatFormatter System...\n');
 

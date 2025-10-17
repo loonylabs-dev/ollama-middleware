@@ -1,6 +1,6 @@
 // Robustness tests for JSON cleaning and error handling
-const { JsonCleanerService, ResponseProcessorService } = require('./dist/middleware/services');
-const { ControlCharDiagnostics } = require('./dist/middleware/services/json-cleaner/utils/control-char-diagnostics.util');
+const { JsonCleanerService, ResponseProcessorService } = require('../../dist/middleware/services');
+const { ControlCharDiagnostics } = require('../../dist/middleware/services/json-cleaner/utils/control-char-diagnostics.util');
 
 console.log('🧪 Testing Middleware Robustness and Error Handling...\n');
 

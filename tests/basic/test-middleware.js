@@ -1,5 +1,5 @@
 // Simple test to verify middleware services work together
-const { 
+const {
   JsonCleanerService,
   RequestFormatterService,
   ResponseProcessorService,
@@ -7,7 +7,7 @@ const {
   TokenEstimatorService,
   FlatFormatter,
   characterPreset
-} = require('./dist/middleware/services');
+} = require('../../dist/middleware/services');
 
 console.log('🧪 Testing Ollama Middleware Foundation...\n');
 
