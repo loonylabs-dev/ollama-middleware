@@ -1,6 +1,6 @@
 import { ollamaService } from '../../services/ollama/ollama.service';
 import { getModelConfig, ModelConfigKey, ValidatedOllamaModelConfig } from '../../shared/config/models.config';
-import { ResponseProcessorService } from '../../services/response-processor/response-processor.service';
+import { ResponseProcessorService } from '../../services/response-processor.service';
 import { BaseAIRequest, BaseAIResult } from '../../shared/types/base-request.types';
 import { logger } from '../../shared/utils/logging.utils';
 import { ModelParameterManagerService, ModelParameterOverrides } from '../../services/model-parameter-manager/model-parameter-manager.service';

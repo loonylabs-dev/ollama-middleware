@@ -5,9 +5,7 @@ export * from './controllers/base';
 export * from './usecases/base';
 
 // Services
-export * from './services/ollama';
-export * from './services/response-processor';
-export * from './services/data-flow-logger';
+export * from './services'; // Exports all services including ResponseProcessorService
 
 // Shared utilities and types
 export * from './shared/config';
