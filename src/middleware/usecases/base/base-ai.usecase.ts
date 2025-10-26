@@ -139,9 +139,9 @@ export abstract class BaseAIUseCase<
         throw new Error('No response received from the Ollama API');
       }
 
-      // Process the response using the ResponseProcessorService
-      const { cleanedJson: processedContent, thinking: extractedThinking } = 
-        ResponseProcessorService.processResponse(result.message.content);
+      // Process the response using the ResponseProcessorService (async for Recipe System)
+      const { cleanedJson: processedContent, thinking: extractedThinking } =
+        await ResponseProcessorService.processResponseAsync(result.message.content);
       
       thinking = extractedThinking;
       success = true;
@@ -188,11 +188,11 @@ export abstract class BaseAIUseCase<
   }
 
   /**
-   * Process the raw AI response
+   * Process the raw AI response using the modern Recipe System
    * Can be overridden by specific use cases if special processing is needed
    */
-  protected processResponse(response: string): { cleanedJson: string; thinking: string } { 
-    return ResponseProcessorService.processResponse(response);
+  protected async processResponse(response: string): Promise<{ cleanedJson: string; thinking: string }> {
+    return ResponseProcessorService.processResponseAsync(response);
   }
 
   /**

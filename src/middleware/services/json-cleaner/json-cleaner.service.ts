@@ -178,40 +178,6 @@ export class JsonCleanerService {
     console.log('Logger configuration updated:', config);
   }
 
-  // ==================== LEGACY METHODS (Backwards Compatibility) ====================
-
-  /**
-   * Legacy method for fixing duplicate keys
-   *
-   * @deprecated This method is not used externally and will be removed in a future version.
-   * Use the Recipe System (processResponseAsync) instead, which handles duplicate keys automatically.
-   *
-   * @internal This is only used internally by DuplicateKeyCleaner strategy
-   */
-  public static fixDuplicateKeysInJson(jsonStr: string): string {
-    const strategy = new DuplicateKeyCleaner();
-    const context = {
-      originalInput: jsonStr,
-      intermediateResult: jsonStr,
-      success: false,
-      modificationHistory: []
-    };
-    const result = strategy.clean(context);
-    return result.output;
-  }
-
-  /**
-   * Legacy method for message formatting
-   *
-   * @deprecated This method serves no real purpose (only calls .trim()) and will be removed in a future version.
-   * Use String.prototype.trim() directly instead.
-   *
-   * @internal Not used anywhere in the codebase
-   */
-  public static formatMessage(message: string): string {
-    return message.trim();
-  }
-
   /**
    * Inspects JSON for issues
    */

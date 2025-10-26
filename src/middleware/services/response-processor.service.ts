@@ -5,9 +5,23 @@ import { JsonCleanerService, CleanedJsonResult } from './json-cleaner';
  * Handles JSON cleaning, content extraction, and response validation
  */
 export class ResponseProcessorService {
-  
+
   /**
    * Process the raw AI response by cleaning JSON and extracting thinking content
+   * Uses the modern Recipe System for better results
+   * @param response The raw response from the AI model
+   * @returns Processed content with thinking extracted
+   */
+  public static async processResponseAsync(response: string): Promise<CleanedJsonResult> {
+    // Delegate to JsonCleanerService's modern async method
+    return JsonCleanerService.processResponseAsync(response);
+  }
+
+  /**
+   * Process the raw AI response by cleaning JSON and extracting thinking content
+   *
+   * @deprecated Use processResponseAsync() instead for better results with the Recipe System
+   *
    * @param response The raw response from the AI model
    * @returns Processed content with thinking extracted
    */

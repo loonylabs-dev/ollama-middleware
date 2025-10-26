@@ -268,10 +268,11 @@ Tests cover:
 The new Recipe System is already integrated in `JsonCleanerService`:
 
 ```typescript
-// New async method (uses Recipe System)
+// ✅ Recommended: Async method (uses Recipe System)
 const result = await JsonCleanerService.processResponseAsync(json);
 
-// Legacy sync method (for backwards compatibility)
+// ⚠️ Deprecated: Sync method (uses legacy orchestrator)
+// Only use for backwards compatibility - will be removed in future version
 const result = JsonCleanerService.processResponse(json);
 ```
 
