@@ -4,7 +4,7 @@ import { ResponseProcessorService } from '../../services/response-processor.serv
 import { BaseAIRequest, BaseAIResult } from '../../shared/types/base-request.types';
 import { logger } from '../../shared/utils/logging.utils';
 import { ModelParameterManagerService, ModelParameterOverrides } from '../../services/model-parameter-manager/model-parameter-manager.service';
-import { UseCaseMetricsLoggerService } from '../../services/use-case-metrics-logger/use-case-metrics-logger.service';
+import { UseCaseMetricsLoggerService } from '../../services/use-case-metrics-logger';
 
 /**
  * Base abstract class for all AI use cases

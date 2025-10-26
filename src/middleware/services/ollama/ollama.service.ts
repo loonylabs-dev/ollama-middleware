@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../../shared/utils/logging.utils';
 import { appConfig } from '../../shared/config/app.config';
 import { OllamaDebugger, OllamaDebugInfo } from './utils/debug-ollama.utils';
-import { DataFlowLoggerService } from '../data-flow-logger/data-flow-logger.service';
+import { DataFlowLoggerService } from '../data-flow-logger';
 
 export interface OllamaResponse {
   message: {

@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.0] - 2025-10-26
 
 ### Added
 
@@ -46,6 +46,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed duplicate `response-processor/` directory (43 lines)
   - Single source of truth: `response-processor.service.ts` (283 lines)
   - Fixed inconsistency between production and test code
+- **Service Export Structure**: Unified and consistent service exports
+  - Added `index.ts` for `use-case-metrics-logger` service
+  - Exported `data-flow-logger` and `use-case-metrics-logger` in services index
+  - Standardized import paths across all services
+  - All 8 services now follow consistent export pattern
+  - Removed legacy placeholder comments from middleware index
 - **Exports**: Simplified middleware exports
   - Changed from individual service exports to unified `export * from './services'`
   - Cleaner and more maintainable structure
