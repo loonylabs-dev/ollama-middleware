@@ -5,13 +5,12 @@
 *A comprehensive TypeScript middleware library for building robust Ollama-based AI backends with advanced features like JSON cleaning, logging, error handling, and more.*
 
 <!-- Horizontal Badge Navigation Bar -->
-[![GitHub Install](https://img.shields.io/badge/Install-GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](#-quick-start)
-[![TypeScript](https://img.shields.io/badge/TypeScript-4.9+-blue.svg?style=for-the-badge&logo=typescript&logoColor=white)](#-features)
+[![npm version](https://img.shields.io/npm/v/ollama-middleware.svg?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/ollama-middleware)
+[![npm downloads](https://img.shields.io/npm/dm/ollama-middleware.svg?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/ollama-middleware)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg?style=for-the-badge&logo=typescript&logoColor=white)](#-features)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](#-prerequisites)
-[![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#-quick-start)
-[![API Documentation](https://img.shields.io/badge/API-Documented-FF6B35?style=for-the-badge&logo=swagger&logoColor=white)](#-documentation)
-[![Test Coverage](https://img.shields.io/badge/Tests-Comprehensive-4CAF50?style=for-the-badge&logo=jest&logoColor=white)](#-testing-and-examples)
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge&logo=opensource&logoColor=white)](#-license)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/loonylabs-dev/ollama-middleware)
 
 </div>
 
@@ -53,16 +52,22 @@
 
 ### Installation
 
-Install directly from GitHub:
+Install from npm:
 
 ```bash
-npm install git+https://github.com/loonylabs-dev/ollama-middleware.git
+npm install ollama-middleware
+```
+
+Or install directly from GitHub:
+
+```bash
+npm install github:loonylabs-dev/ollama-middleware
 ```
 
 Or using a specific version/tag:
 
 ```bash
-npm install git+https://github.com/loonylabs-dev/ollama-middleware.git#v1.0.0
+npm install github:loonylabs-dev/ollama-middleware#v1.1.0
 ```
 
 ### Basic Usage

@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-10-26
+
+### Added
+
+#### Distribution & Publishing
+- **npm Publication**: Package now available on npm registry
+  - Install via `npm install ollama-middleware`
+  - Optimized package size (only production files included)
+  - `prepublishOnly` script ensures build and tests run before publishing
+  - Added `.env.example` to package files for configuration reference
+
+#### Package Metadata
+- **Enhanced Keywords**: Added `chatbot`, `api`, `async`, `streaming`, `response-processing`
+  - Improves discoverability on npm
+  - Better reflects package capabilities
+
+### Changed
+
+#### Documentation
+- **README**: Updated installation instructions
+  - npm installation as primary method
+  - GitHub installation as alternative
+  - Added npm version and download badges
+  - Updated TypeScript version badge to 5.7+
+  - Streamlined badge layout for better visibility
+
+#### Build & Release
+- **Package Configuration**: Optimized for npm distribution
+  - `files` field includes only: `dist/`, `README.md`, `LICENSE`, `.env.example`
+  - Excludes: `src/`, `tests/`, `docs/`, development configs
+  - Smaller install footprint for end users
+
 ## [1.1.0] - 2025-10-26
 
 ### Added
