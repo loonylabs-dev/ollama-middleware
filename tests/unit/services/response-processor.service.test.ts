@@ -116,65 +116,46 @@ Line 3
   });
 
   describe('tryParseJson()', () => {
-    it('should parse valid JSON successfully', () => {
+    it('should parse valid JSON successfully', async () => {
       const response = '{"result": "success", "count": 42}';
-      const parsed = ResponseProcessorService.tryParseJson(response);
+      const parsed = await ResponseProcessorService.tryParseJson(response);
 
       expect(parsed).not.toBeNull();
       expect(parsed.result).toBe('success');
       expect(parsed.count).toBe(42);
     });
 
-    it('should parse JSON with thinking tags', () => {
+    it('should parse JSON with thinking tags', async () => {
       const response = '<think>Thinking</think>{"result": "success"}';
-      const parsed = ResponseProcessorService.tryParseJson(response);
+      const parsed = await ResponseProcessorService.tryParseJson(response);
 
       expect(parsed).not.toBeNull();
       expect(parsed.result).toBe('success');
     });
 
-    it('should return null for invalid JSON', () => {
+    it('should return null for invalid JSON', async () => {
       const response = 'This is not JSON';
-      const parsed = ResponseProcessorService.tryParseJson(response);
+      const parsed = await ResponseProcessorService.tryParseJson(response);
 
       expect(parsed).toBeNull();
     });
 
-    it('should parse arrays', () => {
+    it('should parse arrays', async () => {
       const response = '[1, 2, 3]';
-      const parsed = ResponseProcessorService.tryParseJson(response);
+      const parsed = await ResponseProcessorService.tryParseJson(response);
 
       expect(parsed).not.toBeNull();
       expect(Array.isArray(parsed)).toBe(true);
       expect(parsed).toHaveLength(3);
     });
 
-    it('should handle nested objects', () => {
+    it('should handle nested objects', async () => {
       const response = '{"user": {"name": "Alice", "age": 30}}';
-      const parsed = ResponseProcessorService.tryParseJson(response);
+      const parsed = await ResponseProcessorService.tryParseJson(response);
 
       expect(parsed).not.toBeNull();
       expect(parsed.user.name).toBe('Alice');
       expect(parsed.user.age).toBe(30);
-    });
-  });
-
-  describe('processResponse()', () => {
-    it('should process response and return cleaned JSON and thinking', () => {
-      const response = '<think>My thoughts</think>{"result": "success"}';
-      const result = ResponseProcessorService.processResponse(response);
-
-      expect(result).toHaveProperty('cleanedJson');
-      expect(result).toHaveProperty('thinking');
-      expect(result.thinking).toContain('My thoughts');
-    });
-
-    it('should handle response without thinking tags', () => {
-      const response = '{"result": "success"}';
-      const result = ResponseProcessorService.processResponse(response);
-
-      expect(result.cleanedJson).toBeTruthy();
-      expect(result.thinking).toBe('');
     });
   });
 
@@ -351,9 +332,9 @@ Line 3
   });
 
   describe('processResponseDetailed()', () => {
-    it('should provide comprehensive response analysis', () => {
+    it('should provide comprehensive response analysis', async () => {
       const response = '<think>Thinking</think>{"result": "success"}';
-      const detailed = ResponseProcessorService.processResponseDetailed(response);
+      const detailed = await ResponseProcessorService.processResponseDetailed(response);
 
       expect(detailed).toHaveProperty('raw');
       expect(detailed).toHaveProperty('cleaned');
@@ -368,18 +349,18 @@ Line 3
       expect(detailed.isValidJson).toBe(true);
     });
 
-    it('should calculate accurate statistics', () => {
+    it('should calculate accurate statistics', async () => {
       const response = '<think>Test</think>{"result": "success"}';
-      const detailed = ResponseProcessorService.processResponseDetailed(response);
+      const detailed = await ResponseProcessorService.processResponseDetailed(response);
 
       expect(detailed.stats.originalLength).toBe(response.length);
       expect(detailed.stats.thinkingLength).toBeGreaterThan(0);
       expect(detailed.stats.contentLength).toBeGreaterThan(0);
     });
 
-    it('should handle responses without thinking', () => {
+    it('should handle responses without thinking', async () => {
       const response = '{"result": "success"}';
-      const detailed = ResponseProcessorService.processResponseDetailed(response);
+      const detailed = await ResponseProcessorService.processResponseDetailed(response);
 
       expect(detailed.hasThinking).toBe(false);
       expect(detailed.thinking).toBe('');

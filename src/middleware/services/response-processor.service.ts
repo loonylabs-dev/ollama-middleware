@@ -18,19 +18,6 @@ export class ResponseProcessorService {
   }
 
   /**
-   * Process the raw AI response by cleaning JSON and extracting thinking content
-   *
-   * @deprecated Use processResponseAsync() instead for better results with the Recipe System
-   *
-   * @param response The raw response from the AI model
-   * @returns Processed content with thinking extracted
-   */
-  public static processResponse(response: string): CleanedJsonResult {
-    // Delegate to JsonCleanerService for the actual processing
-    return JsonCleanerService.processResponse(response);
-  }
-
-  /**
    * Extract only the thinking content from a response
    * @param response The raw response from the AI model
    * @returns Extracted thinking content or empty string
@@ -100,14 +87,14 @@ export class ResponseProcessorService {
    * @param response The response to parse
    * @returns Parsed object or null if parsing fails
    */
-  public static tryParseJson(response: string): any | null {
+  public static async tryParseJson(response: string): Promise<any | null> {
     try {
       const contentOnly = this.extractContent(response);
       return JSON.parse(contentOnly);
     } catch {
       // Try with JsonCleanerService if direct parsing fails
       try {
-        const cleaned = JsonCleanerService.processResponse(response);
+        const cleaned = await JsonCleanerService.processResponseAsync(response);
         return JSON.parse(cleaned.cleanedJson);
       } catch {
         return null;
@@ -120,7 +107,7 @@ export class ResponseProcessorService {
    * @param response The raw response
    * @returns Object containing both raw and processed versions
    */
-  public static processResponseDetailed(response: string): {
+  public static async processResponseDetailed(response: string): Promise<{
     raw: string;
     cleaned: CleanedJsonResult;
     parsedJson: any | null;
@@ -134,12 +121,12 @@ export class ResponseProcessorService {
       thinkingLength: number;
       contentLength: number;
     };
-  } {
-    const cleaned = this.processResponse(response);
-    const parsedJson = this.tryParseJson(response);
+  }> {
+    const cleaned = await this.processResponseAsync(response);
+    const parsedJson = await this.tryParseJson(response);
     const thinking = this.extractThinking(response);
     const contentOnly = this.extractContent(response);
-    
+
     return {
       raw: response,
       cleaned,

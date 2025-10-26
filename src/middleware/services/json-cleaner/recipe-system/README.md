@@ -263,24 +263,20 @@ Tests cover:
 - ✅ Missing comma fixes
 - ✅ Structural repair
 
-## Migration from Legacy System
+## Using the Recipe System
 
-The new Recipe System is already integrated in `JsonCleanerService`:
+The Recipe System is fully integrated in `JsonCleanerService`:
 
 ```typescript
-// ✅ Recommended: Async method (uses Recipe System)
+// ✅ Modern approach: Async method with Recipe System
 const result = await JsonCleanerService.processResponseAsync(json);
-
-// ⚠️ Deprecated: Sync method (uses legacy orchestrator)
-// Only use for backwards compatibility - will be removed in future version
-const result = JsonCleanerService.processResponse(json);
 ```
 
-Benefits of migrating to `processResponseAsync`:
-- Automatic recipe selection
-- Better error handling
-- More detailed metrics
-- Fallback to legacy system if problems occur
+Benefits of the Recipe System:
+- Automatic recipe selection based on content analysis
+- Better error handling with intelligent fallbacks
+- More detailed metrics and quality scores
+- Support for different cleaning strategies (conservative, aggressive, adaptive)
 
 ## Best Practices
 

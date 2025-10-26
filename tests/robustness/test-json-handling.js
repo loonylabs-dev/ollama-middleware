@@ -94,7 +94,7 @@ async function testMalformedJsonCleaning() {
     console.log(`   Input: ${sample.substring(0, 60)}...`);
     
     try {
-      const result = JsonCleanerService.processResponse(sample);
+      const result = await JsonCleanerService.processResponseAsync(sample);
       
       // Try to parse the cleaned result
       const parsed = JSON.parse(result.cleanedJson);
@@ -167,7 +167,7 @@ async function testResponseProcessor() {
     console.log(`Testing: ${test.name}...`);
     
     try {
-      const result = ResponseProcessorService.processResponse(test.input);
+      const result = await ResponseProcessorService.processResponseAsync(test.input);
       
       // Check thinking extraction
       const hasThinking = !!result.thinking && result.thinking.trim() !== '';
@@ -216,7 +216,7 @@ async function testErrorScenarios() {
     console.log(`   Input: ${scenario.input.substring(0, 50)}...`);
     
     try {
-      const result = JsonCleanerService.processResponse(scenario.input);
+      const result = await JsonCleanerService.processResponseAsync(scenario.input);
       
       if (scenario.expectRepair) {
         // We expect this to either repair successfully or fail gracefully
@@ -401,7 +401,7 @@ async function testPerformance() {
   const startTime = Date.now();
   
   try {
-    const result = JsonCleanerService.processResponse(malformedLargeJson);
+    const result = await JsonCleanerService.processResponseAsync(malformedLargeJson);
     const duration = Date.now() - startTime;
     
     // Try to parse result
