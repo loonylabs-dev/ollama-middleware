@@ -5,6 +5,146 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+#### Response Processing
+- **ResponseProcessorService.processResponseAsync()**: Modern async method using Recipe System
+  - Automatic recipe selection (conservative, aggressive, adaptive)
+  - Intelligent fallback to legacy orchestrator
+  - Better error handling and quality metrics
+- **43 new unit tests for ResponseProcessorService**: Comprehensive test coverage
+  - `extractThinking()`, `extractContent()`, `hasValidJson()`
+  - `tryParseJson()`, `processResponseAsync()`
+  - `extractAllThinkingTypes()`, `formatForHuman()`
+  - `extractMetadata()`, `validateResponse()`, `processResponseDetailed()`
+  - Total: 155 unit tests (was 114, +41 tests)
+
+#### JSON Cleaning
+- **Modern Recipe System**: Fully integrated as primary cleaning method
+  - Automatic content analysis and recipe suggestion
+  - Conservative mode for valid JSON preservation
+  - Aggressive mode for heavily malformed content
+  - Adaptive mode with intelligent strategy selection
+  - Detailed quality scores and metrics
+
+### Changed
+
+#### Architecture - BREAKING CHANGE
+- **Async-only API**: All synchronous methods removed in favor of async
+  - `JsonCleanerService.processResponseAsync()` is now the only processing method
+  - `ResponseProcessorService.processResponseAsync()` is the primary API
+  - `ResponseProcessorService.tryParseJson()` is now async
+  - `ResponseProcessorService.processResponseDetailed()` is now async
+- **BaseAIUseCase**: Migrated to async processing
+  - Uses `processResponseAsync()` internally
+  - All use cases automatically benefit from Recipe System
+
+#### Services
+- **ResponseProcessorService**: Consolidated from duplicate implementations
+  - Removed duplicate `response-processor/` directory (43 lines)
+  - Single source of truth: `response-processor.service.ts` (283 lines)
+  - Fixed inconsistency between production and test code
+- **Exports**: Simplified middleware exports
+  - Changed from individual service exports to unified `export * from './services'`
+  - Cleaner and more maintainable structure
+
+#### Tests
+- **test-middleware.js**: Migrated to async IIFE pattern
+- **test-json-handling.js**: Migrated to async/await throughout
+- **response-processor.service.test.ts**: Updated for async-only API
+- All 155 unit tests passing (100%)
+- Basic tests: 6/6 passing (100%)
+- Robustness tests: 93% overall score
+
+#### Documentation
+- **Recipe System README**: Updated to reflect async-only API
+  - Removed deprecation warnings
+  - Clarified modern approach
+  - Updated code examples
+
+### Removed - BREAKING CHANGE
+
+#### Deprecated Methods
+- **JsonCleanerService.processResponse()**: Removed synchronous method
+  - Use `processResponseAsync()` instead
+  - Legacy orchestrator still available as internal fallback
+- **ResponseProcessorService.processResponse()**: Removed synchronous method
+  - Use `processResponseAsync()` instead
+- **JsonCleanerService.fixDuplicateKeysInJson()**: Removed unused method
+  - Recipe System handles duplicate keys automatically
+- **JsonCleanerService.formatMessage()**: Removed trivial method
+  - Was only calling `.trim()` - use `String.prototype.trim()` directly
+
+#### Code Cleanup
+- Removed duplicate ResponseProcessorService directory (-43 lines)
+- Removed 4 deprecated/unused methods (-60 lines total)
+- Removed 2 sync test cases that are no longer relevant
+
+### Fixed
+
+- **Production/Test inconsistency**: Fixed issue where BaseAIUseCase used different ResponseProcessorService than tests
+- **Import paths**: Corrected BaseAIUseCase to use consolidated ResponseProcessorService
+- **Type safety**: All async methods properly typed with Promise returns
+
+### Migration Guide
+
+#### Breaking Changes
+
+**Before (v1.0.0):**
+```typescript
+// Synchronous API
+const result = JsonCleanerService.processResponse(json);
+const result = ResponseProcessorService.processResponse(response);
+const parsed = ResponseProcessorService.tryParseJson(response);
+```
+
+**After (v1.1.0+):**
+```typescript
+// Async-only API (REQUIRED)
+const result = await JsonCleanerService.processResponseAsync(json);
+const result = await ResponseProcessorService.processResponseAsync(response);
+const parsed = await ResponseProcessorService.tryParseJson(response);
+const detailed = await ResponseProcessorService.processResponseDetailed(response);
+```
+
+#### Automatic Migration
+
+**If you use BaseAIUseCase**: No changes needed! All use cases that extend `BaseAIUseCase` are automatically migrated and use the async API.
+
+#### Manual Migration Required
+
+**If you use services directly**: Update all calls to use async methods and add `await`:
+- Replace `processResponse()` with `await processResponseAsync()`
+- Add `await` to `tryParseJson()` and `processResponseDetailed()`
+- Ensure calling functions are `async` or handle promises
+
+### Technical Details
+
+#### Code Metrics
+- **Total lines removed**: ~103 lines (deprecated code + duplicates)
+- **Total lines added**: ~413 lines (new tests)
+- **Net change**: +310 lines (mostly tests)
+- **Test coverage**: +43 tests (+38% increase)
+- **Deprecated methods removed**: 4
+- **API methods**: 100% async
+
+#### Performance
+- Recipe System provides better JSON cleaning quality
+- Non-blocking async I/O for improved scalability
+- Intelligent recipe selection based on content analysis
+- Fallback guarantee ensures robustness
+
+#### Quality Metrics
+- Unit tests: 155/155 passing (100%)
+- Basic tests: 6/6 passing (100%)
+- Robustness score: 93%
+- Build: Success
+- Type safety: Full TypeScript coverage
+
+---
+
 ## [1.0.0] - 2025-10-17
 
 ### Added
