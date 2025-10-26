@@ -577,7 +577,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Made with ❤️ for the AI community**
 
-[![GitHub stars](https://img.shields.io/github/stars/planichttm/ollama-middleware?style=social)](https://github.com/loonylabs-dev/ollama-middleware/stargazers)
-[![Follow on GitHub](https://img.shields.io/github/followers/planichttm?style=social&label=Follow)](https://github.com/planichttm)
+[![GitHub stars](https://img.shields.io/github/stars/loonylabs-dev/ollama-middleware?style=social)](https://github.com/loonylabs-dev/ollama-middleware/stargazers)
+[![Follow on GitHub](https://img.shields.io/github/followers/loonylabs-dev?style=social&label=Follow)](https://github.com/loonylabs-dev)
 
 </div>
