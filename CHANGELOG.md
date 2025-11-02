@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-01-26
+
+### Changed
+
+#### Package Naming & Organization
+- **BREAKING**: Package renamed from `ollama-middleware` to `@loonylabs/ollama-middleware`
+  - Now part of the @loonylabs npm organization
+  - Improved discoverability and branding
+  - All import statements updated: `from '@loonylabs/ollama-middleware'`
+
+#### Documentation
+- **README**: Updated all npm badges and links to use scoped package name
+- **README**: Updated installation instructions to use `@loonylabs/ollama-middleware`
+- **README**: Updated all code examples with new import statements
+
+### Migration Guide
+
+To upgrade from `ollama-middleware` to `@loonylabs/ollama-middleware`:
+
+1. Update your `package.json`:
+   ```diff
+   - "ollama-middleware": "^1.2.1"
+   + "@loonylabs/ollama-middleware": "^1.3.0"
+   ```
+
+2. Update all import statements in your code:
+   ```diff
+   - import { BaseAIUseCase } from 'ollama-middleware';
+   + import { BaseAIUseCase } from '@loonylabs/ollama-middleware';
+   ```
+
+3. Run `npm install` to install the new package
+
 ## [1.2.1] - 2025-10-26
 
 ### Fixed

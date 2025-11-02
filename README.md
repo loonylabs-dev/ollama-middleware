@@ -5,8 +5,8 @@
 *A comprehensive TypeScript middleware library for building robust Ollama-based AI backends with advanced features like JSON cleaning, logging, error handling, and more.*
 
 <!-- Horizontal Badge Navigation Bar -->
-[![npm version](https://img.shields.io/npm/v/ollama-middleware.svg?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/ollama-middleware)
-[![npm downloads](https://img.shields.io/npm/dm/ollama-middleware.svg?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/ollama-middleware)
+[![npm version](https://img.shields.io/npm/v/@loonylabs/ollama-middleware.svg?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/@loonylabs/ollama-middleware)
+[![npm downloads](https://img.shields.io/npm/dm/@loonylabs/ollama-middleware.svg?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/@loonylabs/ollama-middleware)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg?style=for-the-badge&logo=typescript&logoColor=white)](#-features)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](#-prerequisites)
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge&logo=opensource&logoColor=white)](#-license)
@@ -55,7 +55,7 @@
 Install from npm:
 
 ```bash
-npm install ollama-middleware
+npm install @loonylabs/ollama-middleware
 ```
 
 Or install directly from GitHub:
@@ -67,13 +67,13 @@ npm install github:loonylabs-dev/ollama-middleware
 Or using a specific version/tag:
 
 ```bash
-npm install github:loonylabs-dev/ollama-middleware#v1.1.0
+npm install github:loonylabs-dev/ollama-middleware#v1.3.0
 ```
 
 ### Basic Usage
 
 ```typescript
-import { BaseAIUseCase, BaseAIRequest, BaseAIResult } from 'ollama-middleware';
+import { BaseAIUseCase, BaseAIRequest, BaseAIResult } from '@loonylabs/ollama-middleware';
 
 // Define your request/response interfaces
 interface MyRequest extends BaseAIRequest<string> {
@@ -116,7 +116,7 @@ class MyChatUseCase extends BaseAIUseCase<string, MyRequest, MyResult> {
 import { 
   FlatFormatter, 
   personPreset
-} from 'ollama-middleware';
+} from '@loonylabs/ollama-middleware';
 
 class ProfileGeneratorUseCase extends BaseAIUseCase {
   protected readonly systemMessage = `You are a professional profile creator.
@@ -285,7 +285,7 @@ The test documentation includes:
 The **Tweet Generator** example showcases parameter configuration for controlling output length:
 
 ```typescript
-import { TweetGeneratorUseCase } from 'ollama-middleware';
+import { TweetGeneratorUseCase } from '@loonylabs/ollama-middleware';
 
 const tweetGenerator = new TweetGeneratorUseCase();
 
@@ -372,7 +372,7 @@ curl -X POST http://localhost:3000/api/chat \
 Advanced JSON repair with automatic strategy selection and modular operations:
 
 ```typescript
-import { JsonCleanerService, JsonCleanerFactory } from 'ollama-middleware';
+import { JsonCleanerService, JsonCleanerFactory } from '@loonylabs/ollama-middleware';
 
 // Simple usage (async - uses new recipe system with fallback)
 const result = await JsonCleanerService.processResponseAsync(malformedJson);
@@ -398,7 +398,7 @@ console.log('Changes:', result.totalChanges);
 
 **Available Templates:**
 ```typescript
-import { RecipeTemplates } from 'ollama-middleware';
+import { RecipeTemplates } from '@loonylabs/ollama-middleware';
 
 const conservativeRecipe = RecipeTemplates.conservative();
 const aggressiveRecipe = RecipeTemplates.aggressive();
@@ -419,7 +419,7 @@ const flat = FlatFormatter.flatten({ name: 'Alice', age: 30 });
 
 **For complex nested prompts:** Use RequestFormatterService
 ```typescript
-import { RequestFormatterService } from 'ollama-middleware';
+import { RequestFormatterService } from '@loonylabs/ollama-middleware';
 
 const prompt = {
   context: { genre: 'sci-fi', tone: 'dark' },
@@ -465,7 +465,7 @@ See [Performance Monitoring Guide](docs/PERFORMANCE_MONITORING.md) for advanced 
 Multi-level logging with contextual metadata:
 
 ```typescript
-import { logger } from 'ollama-middleware';
+import { logger } from '@loonylabs/ollama-middleware';
 
 logger.info('Operation completed', {
   context: 'MyService',
@@ -481,7 +481,7 @@ logger.info('Operation completed', {
 Flexible model management:
 
 ```typescript
-import { getModelConfig } from 'ollama-middleware';
+import { getModelConfig } from '@loonylabs/ollama-middleware';
 
 // MODEL1_NAME is required in .env or will throw error
 const config = getModelConfig('MODEL1');
@@ -497,7 +497,7 @@ console.log(config.baseUrl);  // Value from MODEL1_URL or default localhost
 Ollama-middleware provides fine-grained control over model parameters to optimize output for different use cases:
 
 ```typescript
-import { BaseAIUseCase, ModelParameterOverrides } from 'ollama-middleware';
+import { BaseAIUseCase, ModelParameterOverrides } from '@loonylabs/ollama-middleware';
 
 class MyUseCase extends BaseAIUseCase<MyRequest, MyResult> {
   protected getParameterOverrides(): ModelParameterOverrides {
@@ -522,7 +522,7 @@ class MyUseCase extends BaseAIUseCase<MyRequest, MyResult> {
 **Available Presets:**
 
 ```typescript
-import { ModelParameterManagerService } from 'ollama-middleware';
+import { ModelParameterManagerService } from '@loonylabs/ollama-middleware';
 
 // Use curated presets for common use cases
 const creativeParams = ModelParameterManagerService.getDefaultParametersForType('creative_writing');
