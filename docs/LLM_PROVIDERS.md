@@ -19,12 +19,13 @@ Starting with v2.0.0, `@loonylabs/llm-middleware` supports multiple LLM provider
 src/middleware/services/llm/
 ├── providers/
 │   ├── base-llm-provider.ts       # Abstract base class
-│   ├── ollama-provider.ts         # Ollama implementation
-│   ├── openai-provider.ts         # Coming in v2.1
-│   └── anthropic-provider.ts      # Coming in v2.1
+│   ├── ollama-provider.ts         # Ollama implementation (v2.0+)
+│   ├── anthropic-provider.ts      # Anthropic implementation (v2.1+)
+│   └── openai-provider.ts         # Coming soon
 ├── types/
 │   ├── common.types.ts            # Provider-agnostic types
-│   └── ollama.types.ts            # Ollama-specific types
+│   ├── ollama.types.ts            # Ollama-specific types
+│   └── anthropic.types.ts         # Anthropic-specific types (v2.1+)
 └── llm.service.ts                 # Main orchestrator
 ```
 
@@ -113,7 +114,62 @@ console.log('Available:', providers);
 
 **Documentation:** See [OLLAMA_PARAMETERS.md](./OLLAMA_PARAMETERS.md)
 
-### OpenAI (Coming in v2.1)
+### Anthropic Provider (v2.1+)
+
+Full support for Anthropic Claude models with:
+- All Claude 3.x models (Opus, Sonnet, Haiku)
+- Claude 4.x models (Sonnet, Haiku)
+- Extended context windows (up to 200K tokens)
+- System prompts
+- Lightweight axios-based implementation (no SDK dependency)
+
+**Usage:**
+
+```typescript
+import { anthropicProvider, llmService, LLMProvider } from '@loonylabs/llm-middleware';
+
+// Option 1: Use via LLM Service
+const response1 = await llmService.call(
+  "Explain quantum computing",
+  {
+    provider: LLMProvider.ANTHROPIC,
+    model: "claude-3-5-sonnet-20241022",
+    authToken: process.env.ANTHROPIC_API_KEY,
+    maxTokens: 1024,
+    temperature: 0.7
+  }
+);
+
+// Option 2: Use provider directly
+const response2 = await anthropicProvider.callWithSystemMessage(
+  "Write a haiku about coding",
+  "You are a creative poet",
+  {
+    model: "claude-3-5-sonnet-20241022",
+    authToken: process.env.ANTHROPIC_API_KEY,
+    maxTokens: 1024,
+    temperature: 0.7,
+    top_p: 0.9,
+    top_k: 50
+  }
+);
+```
+
+**Supported Parameters:**
+- `maxTokens` - Maximum tokens to generate (required, 1-4096)
+- `temperature` - Randomness control (0-1, default: 0.7)
+- `top_p` - Nucleus sampling (0-1)
+- `top_k` - Top-k sampling
+- `stop_sequences` - Custom stop sequences
+
+**Configuration:**
+
+```env
+ANTHROPIC_API_KEY=sk-ant-api03-...your-key...
+ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
+```
+
+### OpenAI (Coming in v2.2)
 
 Planned support for:
 - GPT-4, GPT-3.5-turbo, etc.
@@ -121,14 +177,7 @@ Planned support for:
 - Function calling
 - Vision capabilities
 
-### Anthropic (Coming in v2.1)
-
-Planned support for:
-- Claude 3 models (Opus, Sonnet, Haiku)
-- Extended context windows
-- System prompts
-
-### Google (Coming in v2.1)
+### Google (Coming in v2.2)
 
 Planned support for:
 - Gemini models
@@ -351,14 +400,18 @@ If you're migrating from v1.x (ollama-middleware), see [CHANGELOG.md](../CHANGEL
 
 ## Roadmap
 
-### v2.1 (Planned)
-- OpenAI Provider
-- Anthropic Provider
-- Google Provider
-- Unified parameter mapping
+### v2.1 (Released)
+- ✅ Anthropic Provider (Claude models)
+- ✅ Parametrized provider testing
+- ✅ Provider-specific logging
 
 ### v2.2 (Planned)
+- OpenAI Provider (GPT models)
+- Google Provider (Gemini models)
+- Unified parameter mapping
 - Streaming support across providers
+
+### v2.3 (Planned)
 - Provider health checking
 - Automatic failover
 - Response caching

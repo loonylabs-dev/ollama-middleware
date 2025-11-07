@@ -4,20 +4,22 @@ Complete testing documentation for all test categories, from unit tests to end-t
 
 ## 📋 Quick Reference
 
-| Test Command | Category | Ollama Required | Description |
-|-------------|----------|----------------|-------------|
+| Test Command | Category | Provider Required | Description |
+|-------------|----------|-------------------|-------------|
 | `npm run test:unit` | Unit | ❌ No | Jest unit tests (114 tests) |
 | `npm run test:unit:watch` | Unit | ❌ No | Jest watch mode for development |
 | `npm run test:unit:coverage` | Unit | ❌ No | Jest with coverage report |
 | `npm run test:basic` | Component | ❌ No | Basic middleware services validation |
 | `npm run test:integration` | Integration | ❌ No | FlatFormatter system tests |
-| `npm run test:integration:parameters` | Integration | ✅ Yes | Token limiting & parameter config |
+| `npm run test:integration:parameters` | Integration | ✅ Ollama | Token limiting & parameter config |
 | `npm run test:robustness` | Robustness | ❌ No | JSON cleaning & error handling |
-| `npm run test:e2e` | E2E | ✅ Yes | Complete workflow with Ollama API |
-| `npm run test:manual:smoke` | Manual | ✅ Yes | Smoke test with real Ollama API |
-| `npm run test:manual:verify-params` | Manual | ✅ Yes | Parameter verification test |
+| `npm run test:e2e` | E2E | ✅ Ollama | Complete workflow with Ollama API |
+| `npm run test:provider:ollama` | Provider | ✅ Ollama | Ollama provider smoke test |
+| `npm run test:provider:anthropic` | Provider | ✅ Anthropic | Anthropic provider smoke test |
+| `npm run test:manual:smoke` | Manual | ✅ Ollama | Smoke test with real Ollama API |
+| `npm run test:manual:verify-params` | Manual | ✅ Ollama | Parameter verification test |
 | `npm run test:manual:formatter-demo` | Manual | ❌ No | RequestFormatter demo |
-| `npm run test:manual:story-test` | Manual | ✅ Yes | Story generator use case demo |
+| `npm run test:manual:story-test` | Manual | ✅ Ollama | Story generator use case demo |
 | `npm run test:all` | Suite | ❌ No | All automated tests (excludes E2E) |
 | `npm run test:ci` | CI/CD | ❌ No | CI-optimized Jest tests |
 
@@ -32,7 +34,9 @@ Complete testing documentation for all test categories, from unit tests to end-t
    npm run build
    ```
 
-2. **For tests that require Ollama** (marked with ✅ above):
+2. **For tests that require a provider** (marked with ✅ above):
+
+   **For Ollama:**
    ```bash
    # Start Ollama server
    ollama serve
@@ -42,6 +46,13 @@ Complete testing documentation for all test categories, from unit tests to end-t
 
    # Pull the model (if not already installed)
    ollama pull phi3:mini
+   ```
+
+   **For Anthropic:**
+   ```bash
+   # Set API key in your .env file
+   echo "ANTHROPIC_API_KEY=sk-ant-api03-..." >> .env
+   echo "ANTHROPIC_MODEL=claude-3-5-sonnet-20241022" >> .env
    ```
 
 ### Run All Tests
@@ -77,7 +88,8 @@ npm run test:all && npm run test:e2e
 ├── /e2e               # End-to-end tests (JavaScript)
 │   └── test-workflow.js
 ├── /manual            # Manual/interactive tests (TypeScript/JavaScript)
-│   ├── smoke-test.ts
+│   ├── smoke-test.ts                # Legacy Ollama smoke test
+│   ├── provider-smoke-test.ts       # Parametrized provider tests (v2.1+)
 │   ├── verify-parameters.js
 │   ├── request-formatter-demo.ts
 │   └── story-generator-test.ts
@@ -301,6 +313,122 @@ Testing complete pipeline from request to parsed result...
 
 🎉 E2E workflow complete - all components working together!
 ```
+
+---
+
+### 🔌 Provider Tests (v2.1+)
+
+The provider tests validate individual LLM provider implementations using a unified, parametrized test infrastructure.
+
+#### Ollama Provider Test (`npm run test:provider:ollama`)
+
+**File**: `tests/manual/provider-smoke-test.ts`
+**Provider Required**: ✅ Ollama
+**Duration**: ~10-15 seconds
+
+**What's tested**:
+1. Memory management utilities
+2. Data flow logger functionality
+3. Ollama provider via LLM Service
+4. Real API call with configured model
+5. Response validation and metrics
+6. Log file generation and verification
+
+**Prerequisites**:
+- Ollama server running (`ollama serve`)
+- MODEL1_NAME configured in `.env`
+- Model pulled and available
+
+**Expected Results**:
+```
+🚀 Starting Provider Smoke Test
+==========================================
+Provider: ollama
+Model: phi3:mini
+Base URL: http://localhost:11434
+API Key configured: false
+==========================================
+
+📊 Test 1: Memory Management Utils
+✅ Memory utils working
+
+📝 Test 2: DataFlowLogger
+✅ DataFlowLogger working
+
+🤖 Test 3: ollama Provider via LLM Service
+✅ API call successful!
+Response length: 45
+Request duration: 1234ms
+
+📊 Metadata:
+  Provider: ollama
+  Model: phi3:mini
+  Tokens used: 42
+  Processing time: 1234ms
+
+📁 Checking log files...
+✅ Enhanced logging features verified!
+
+✨ ALL TESTS PASSED! ✨
+```
+
+---
+
+#### Anthropic Provider Test (`npm run test:provider:anthropic`)
+
+**File**: `tests/manual/provider-smoke-test.ts`
+**Provider Required**: ✅ Anthropic
+**Duration**: ~5-10 seconds
+
+**What's tested**:
+1. Memory management utilities
+2. Data flow logger functionality
+3. Anthropic provider via LLM Service
+4. Real API call with Claude model
+5. Response validation and metrics
+6. Log file generation and verification
+
+**Prerequisites**:
+- ANTHROPIC_API_KEY configured in `.env`
+- ANTHROPIC_MODEL set (e.g., claude-3-5-sonnet-20241022)
+- Valid API key with available credits
+
+**Expected Results**:
+```
+🚀 Starting Provider Smoke Test
+==========================================
+Provider: anthropic
+Model: claude-3-5-sonnet-20241022
+API Key configured: true
+==========================================
+
+📊 Test 1: Memory Management Utils
+✅ Memory utils working
+
+📝 Test 2: DataFlowLogger
+✅ DataFlowLogger working
+
+🤖 Test 3: anthropic Provider via LLM Service
+✅ API call successful!
+Response length: 42
+Request duration: 2345ms
+
+📊 Metadata:
+  Provider: anthropic
+  Model: claude-3-5-sonnet-20241022
+  Tokens used: 50
+  Processing time: 2345ms
+
+📁 Checking log files...
+✅ Enhanced logging features verified!
+
+✨ ALL TESTS PASSED! ✨
+```
+
+**Troubleshooting for Anthropic**:
+- Verify your API key is correct in `.env`
+- Check your account has sufficient credits
+- Ensure the model name is valid (see Anthropic docs)
 
 ---
 

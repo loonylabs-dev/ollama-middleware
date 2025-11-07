@@ -2,7 +2,7 @@
 
 # 🚀 LLM Middleware
 
-*A comprehensive TypeScript middleware library for building robust multi-provider LLM backends with support for Ollama, OpenAI, Anthropic, and Google. Features advanced JSON cleaning, logging, error handling, and more.*
+*A comprehensive TypeScript middleware library for building robust multi-provider LLM backends. Currently supports Ollama and Anthropic Claude, with OpenAI and Google planned. Features advanced JSON cleaning, logging, error handling, and more.*
 
 <!-- Horizontal Badge Navigation Bar -->
 [![npm version](https://img.shields.io/npm/v/@loonylabs/llm-middleware.svg?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/@loonylabs/llm-middleware)
@@ -40,7 +40,8 @@
 - 🏗️ **Clean Architecture**: Base classes and interfaces for scalable AI applications
 - 🤖 **Multi-Provider Architecture**: Extensible provider system with strategy pattern
   - ✅ **Ollama**: Fully supported with comprehensive parameter control
-  - 🔜 **OpenAI, Anthropic, Google**: Planned for future releases
+  - ✅ **Anthropic Claude**: Complete support for Claude models (Opus, Sonnet, Haiku)
+  - 🔜 **OpenAI, Google**: Planned for future releases
   - 🔌 **Pluggable**: Easy to add custom providers - see [LLM Providers Guide](docs/LLM_PROVIDERS.md)
 - 🧹 **JSON Cleaning**: Recipe-based JSON repair system with automatic strategy selection
 - 🎨 **FlatFormatter System**: Advanced data formatting for LLM consumption
@@ -116,7 +117,7 @@ class MyChatUseCase extends BaseAIUseCase<string, MyRequest, MyResult> {
 <summary><strong>🔌 Using the Multi-Provider Architecture</strong></summary>
 
 ```typescript
-import { llmService, LLMProvider, ollamaProvider } from '@loonylabs/llm-middleware';
+import { llmService, LLMProvider, ollamaProvider, anthropicProvider } from '@loonylabs/llm-middleware';
 
 // Option 1: Use the LLM Service orchestrator (recommended for flexibility)
 const response1 = await llmService.call(
@@ -128,8 +129,20 @@ const response1 = await llmService.call(
   }
 );
 
+// Use Anthropic Claude
+const response2 = await llmService.call(
+  "Explain quantum computing",
+  {
+    provider: LLMProvider.ANTHROPIC,
+    model: "claude-3-5-sonnet-20241022",
+    authToken: process.env.ANTHROPIC_API_KEY,
+    maxTokens: 1024,
+    temperature: 0.7
+  }
+);
+
 // Option 2: Use provider directly for provider-specific features
-const response2 = await ollamaProvider.callWithSystemMessage(
+const response3 = await ollamaProvider.callWithSystemMessage(
   "Write a haiku about coding",
   "You are a creative poet",
   {
@@ -141,11 +154,21 @@ const response2 = await ollamaProvider.callWithSystemMessage(
   }
 );
 
+// Or use Anthropic provider directly
+const response4 = await anthropicProvider.call(
+  "Write a haiku about coding",
+  {
+    model: "claude-3-5-sonnet-20241022",
+    authToken: process.env.ANTHROPIC_API_KEY,
+    maxTokens: 1024
+  }
+);
+
 // Set default provider for your application
 llmService.setDefaultProvider(LLMProvider.OLLAMA);
 
 // Now calls use Ollama by default
-const response3 = await llmService.call("Hello!", { model: "llama2" });
+const response5 = await llmService.call("Hello!", { model: "llama2" });
 ```
 
 For more details on the multi-provider system, see the [LLM Providers Guide](docs/LLM_PROVIDERS.md).
@@ -255,13 +278,17 @@ NODE_ENV=development
 # Logging
 LOG_LEVEL=info
 
-# LLM Provider Configuration (REQUIRED)
+# LLM Provider Configuration
 MODEL1_NAME=phi3:mini              # Required: Your model name
 MODEL1_URL=http://localhost:11434  # Optional: Defaults to localhost (Ollama)
 MODEL1_TOKEN=optional-auth-token   # Optional: For authenticated providers
+
+# Anthropic API Configuration (Optional)
+ANTHROPIC_API_KEY=your_anthropic_api_key_here    # Your Anthropic API key
+ANTHROPIC_MODEL=claude-3-5-sonnet-20241022       # Default Claude model
 ```
 
-**Multi-Provider Support:** Currently, the middleware is fully integrated with Ollama. The architecture supports multiple providers (OpenAI, Anthropic, Google coming soon). See the [LLM Providers Guide](docs/LLM_PROVIDERS.md) for details on the provider system and how to use or add providers.
+**Multi-Provider Support:** The middleware is fully integrated with **Ollama** and **Anthropic Claude**. Support for OpenAI and Google is planned. See the [LLM Providers Guide](docs/LLM_PROVIDERS.md) for details on the provider system and how to use or add providers.
 
 </details>
 

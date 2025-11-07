@@ -5,6 +5,84 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-11-07
+
+### 🚀 New Provider: Anthropic Claude Support
+
+This release adds full support for Anthropic Claude models, making llm-middleware truly multi-provider.
+
+### Added
+
+#### Anthropic Provider
+- **AnthropicProvider**: Complete implementation for Anthropic Claude API
+  - Support for all Claude models (Opus, Sonnet, Haiku)
+  - Lightweight implementation using axios (no SDK dependency)
+  - Full compatibility with existing logging and debugging infrastructure
+  - Session management and error handling
+- **Type Definitions**: Comprehensive TypeScript types for Anthropic API
+  - `AnthropicRequestOptions`: Request configuration
+  - `AnthropicResponse`: Normalized response format
+  - `AnthropicAPIRequest/Response`: Raw API types
+- **Environment Configuration**:
+  - `ANTHROPIC_API_KEY`: API key configuration
+  - `ANTHROPIC_MODEL`: Default model selection (e.g., claude-3-5-sonnet-20241022)
+
+#### Testing
+- **Parametrized Provider Tests**: Unified test infrastructure
+  - `tests/manual/provider-smoke-test.ts`: Single test for all providers
+  - `npm run test:provider:ollama`: Test Ollama provider
+  - `npm run test:provider:anthropic`: Test Anthropic provider
+  - Environment-based provider selection via `TEST_PROVIDER`
+
+#### Logging
+- **Provider-Specific Logs**: Automatic log separation by provider
+  - `logs/llm/anthropic/requests/`: Anthropic API logs
+  - Same debug features as Ollama (request/response, thinking extraction, metrics)
+
+### Changed
+
+#### LLMService
+- **Provider Registration**: AnthropicProvider automatically registered
+  - Available via `LLMProvider.ANTHROPIC` enum
+  - Access via `llmService.getProvider(LLMProvider.ANTHROPIC)`
+
+#### Documentation
+- Updated `.env.example` with Anthropic configuration
+- All provider-related types exported from types index
+
+### Usage
+
+```typescript
+import { LLMService, LLMProvider } from '@loonylabs/llm-middleware';
+
+const llmService = new LLMService();
+
+// Use Anthropic Claude
+const response = await llmService.call('Hello!', {
+  provider: LLMProvider.ANTHROPIC,
+  model: 'claude-3-5-sonnet-20241022',
+  authToken: process.env.ANTHROPIC_API_KEY,
+  maxTokens: 1024
+});
+
+// Or get provider directly
+const anthropic = llmService.getProvider(LLMProvider.ANTHROPIC);
+const response = await anthropic.call('Hello!', {
+  model: 'claude-3-5-sonnet-20241022',
+  authToken: process.env.ANTHROPIC_API_KEY
+});
+```
+
+### Roadmap
+
+#### Planned for v2.2+
+- OpenAI Provider implementation
+- Google Gemini Provider
+- Unified parameter mapping across providers
+- Streaming support for all providers
+
+---
+
 ## [2.0.0] - 2025-11-07
 
 ### 🚀 Major Release: Multi-Provider Architecture
