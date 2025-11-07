@@ -1,10 +1,10 @@
-import { DataFlowLoggerService } from '../../../src/middleware/services/data-flow-logger/data-flow-logger.service';
+import { DataFlowLoggerService } from '../../../src/middleware/services/data-flow-logger';
 import * as fs from 'fs';
 import * as path from 'path';
 
 describe('DataFlowLoggerService', () => {
   let logger: DataFlowLoggerService;
-  const testLogDir = path.join(process.cwd(), 'logs', 'ollama', 'requests-data-flow');
+  const testLogDir = path.join(process.cwd(), 'logs', 'llm', 'ollama', 'requests-data-flow');
 
   beforeEach(() => {
     logger = DataFlowLoggerService.getInstance();

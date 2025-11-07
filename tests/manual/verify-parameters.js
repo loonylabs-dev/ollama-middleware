@@ -53,7 +53,7 @@ async function verifyParameters() {
     console.log('\n' + '='.repeat(60));
     console.log('\n💡 VERIFICATION STEPS:\n');
     console.log('1. Check the latest Ollama log file in:');
-    console.log('   logs/ollama/requests/');
+    console.log('   logs/llm/ollama/requests/');
     console.log('');
     console.log('2. Look for the "options" object in the request JSON');
     console.log('');

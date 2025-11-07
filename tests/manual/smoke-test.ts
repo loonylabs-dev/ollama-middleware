@@ -4,11 +4,11 @@
  */
 
 import * as dotenv from 'dotenv';
-import { OllamaService } from '../src/middleware/services/ollama/ollama.service';
-import { DataFlowLoggerService } from '../src/middleware/services/data-flow-logger/data-flow-logger.service';
-import { ControlCharDiagnostics } from '../src/middleware/services/json-cleaner/utils/control-char-diagnostics.util';
-import { getMemoryUsage } from '../src/middleware/shared/utils/memory-management.utils';
-import { getModelConfig } from '../src/middleware/shared/config/models.config';
+import { OllamaService } from '../../src/middleware/services/llm/providers/ollama-provider';
+import { DataFlowLoggerService } from '../../src/middleware/services/data-flow-logger/data-flow-logger.service';
+import { ControlCharDiagnostics } from '../../src/middleware/services/json-cleaner/utils/control-char-diagnostics.util';
+import { getMemoryUsage } from '../../src/middleware/shared/utils/memory-management.utils';
+import { getModelConfig } from '../../src/middleware/shared/config/models.config';
 
 // Load environment variables
 dotenv.config();
@@ -75,7 +75,7 @@ async function runSmokeTest() {
       console.log('\n📁 Checking log files...');
       const fs = require('fs');
       const path = require('path');
-      const logsDir = path.join(process.cwd(), 'logs', 'ollama', 'requests');
+      const logsDir = path.join(process.cwd(), 'logs', 'llm', 'ollama', 'requests');
       
       if (fs.existsSync(logsDir)) {
         const files = fs.readdirSync(logsDir);
