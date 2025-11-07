@@ -1,7 +1,7 @@
-import { OllamaModelConfig, ValidatedOllamaModelConfig, ModelsConfigMap } from '../types';
+import { LLMModelConfig, ValidatedLLMModelConfig, ModelsConfigMap } from '../types';
 
 // Re-export for compatibility
-export { OllamaModelConfig, ValidatedOllamaModelConfig, ModelsConfigMap };
+export { LLMModelConfig, ValidatedLLMModelConfig, ModelsConfigMap };
 
 /**
  * Default model configurations
@@ -25,18 +25,18 @@ export type ModelConfigKey = keyof typeof MODELS;
  * Returns a validated config with guaranteed model name
  * @throws Error if model name is not configured
  */
-export function getModelConfig(key: ModelConfigKey): ValidatedOllamaModelConfig {
+export function getModelConfig(key: ModelConfigKey): ValidatedLLMModelConfig {
   const config = MODELS[key];
-  
+
   if (!config.name) {
     throw new Error(
       `Model name for ${key} is not configured. ` +
       `Please set MODEL1_NAME in your .env file or environment variables.`
     );
   }
-  
+
   // Type assertion: we've validated that name exists
-  return config as ValidatedOllamaModelConfig;
+  return config as ValidatedLLMModelConfig;
 }
 
 /**

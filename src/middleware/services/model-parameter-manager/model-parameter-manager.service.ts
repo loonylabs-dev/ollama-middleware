@@ -90,11 +90,11 @@ export interface ModelParameterOverrides {
   presencePenalty?: number;
   /** Repeat last N tokens override */
   repeatLastN?: number;
-  /** Maximum tokens to generate (snake_case for Ollama API compatibility) */
+  /** Maximum tokens to generate (Ollama: num_predict) */
   num_predict?: number;
-  /** Context window size (snake_case for Ollama API compatibility) */
+  /** Context window size (Ollama: num_ctx) */
   num_ctx?: number;
-  /** Batch size for parallel processing (snake_case for Ollama API compatibility) */
+  /** Batch size for parallel processing (Ollama: num_batch) */
   num_batch?: number;
 }
 

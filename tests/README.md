@@ -1,4 +1,4 @@
-# Ollama Middleware Test Suite
+# LLM Middleware Test Suite
 
 Complete testing documentation for all test categories, from unit tests to end-to-end workflows.
 
@@ -141,7 +141,7 @@ npm run test:unit:coverage     # With coverage report
 
 **Example Output**:
 ```
-🧪 Testing Ollama Middleware Foundation...
+🧪 Testing LLM Middleware Foundation...
 
 1. Testing RequestFormatterService...
    ✅ Prompt validation: true

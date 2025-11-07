@@ -1,12 +1,12 @@
-# Getting Started with Ollama Middleware
+# Getting Started with LLM Middleware
 
-This guide will help you get up and running with Ollama Middleware in your project.
+This guide will help you get up and running with LLM Middleware in your project.
 
 ## Prerequisites
 
 - **Node.js** 18+ installed
 - **TypeScript** 4.9+ knowledge
-- **Ollama** server running (local or remote)
+- **LLM Provider** configured (e.g., Ollama server for Ollama provider)
 
 ## Installation
 
@@ -26,11 +26,11 @@ PORT=3000
 NODE_ENV=development
 LOG_LEVEL=info
 
-# Ollama Model Configuration
+# LLM Provider Configuration
 # IMPORTANT: MODEL1_NAME is REQUIRED
 MODEL1_NAME=phi3:mini               # Required: Your model name (e.g., phi3:mini, llama3:8b, gemma2:2b)
-MODEL1_URL=http://localhost:11434  # Optional: Defaults to localhost:11434
-MODEL1_TOKEN=your-token-here        # Optional: Only for authenticated Ollama servers
+MODEL1_URL=http://localhost:11434  # Optional: Defaults to localhost:11434 (Ollama default)
+MODEL1_TOKEN=your-token-here        # Optional: For authenticated providers
 ```
 
 ### 2. Basic Use Case Implementation
@@ -161,9 +161,9 @@ app.listen(port, () => {
 
 ## Testing Your Setup
 
-### 1. Start Ollama
+### 1. Start Your LLM Provider
 
-Make sure Ollama is running:
+Make sure your LLM provider is running (example for Ollama):
 
 ```bash
 ollama serve
@@ -250,13 +250,13 @@ await logger.info('Operation completed', {
 
 ## Common Issues
 
-### Ollama Connection Error
+### LLM Provider Connection Error
 
-If you get connection errors:
+If you get connection errors (Ollama example):
 
-1. Check if Ollama is running: `ollama list`
+1. Check if your provider is running: `ollama list` (for Ollama)
 2. Verify the URL in your `.env` file
-3. Test direct connection: `curl http://localhost:11434/api/tags`
+3. Test direct connection: `curl http://localhost:11434/api/tags` (for Ollama)
 
 ### TypeScript Errors
 
@@ -268,9 +268,9 @@ npm install @types/node @types/express
 
 ### Model Not Found
 
-If you get "model not found" errors:
+If you get "model not found" errors (Ollama example):
 
-1. Check available models: `ollama list`
+1. Check available models: `ollama list` (for Ollama)
 2. Pull a model: `ollama pull phi3:mini` (or any model you prefer)
 3. Set MODEL1_NAME in your `.env` file to match the model name
 

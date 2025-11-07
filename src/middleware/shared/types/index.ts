@@ -3,7 +3,7 @@ export * from './client-info';
 export * from './base-request.types';
 
 // Configuration types
-export interface OllamaModelConfig {
+export interface LLMModelConfig {
   name: string | undefined;  // Can be undefined if not set in env
   baseUrl: string;
   bearerToken?: string;
@@ -12,11 +12,11 @@ export interface OllamaModelConfig {
 }
 
 // Validated config with required name
-export interface ValidatedOllamaModelConfig extends Omit<OllamaModelConfig, 'name'> {
+export interface ValidatedLLMModelConfig extends Omit<LLMModelConfig, 'name'> {
   name: string;  // Guaranteed to exist after validation
 }
 
-export type ModelsConfigMap = Record<string, OllamaModelConfig>;
+export type ModelsConfigMap = Record<string, LLMModelConfig>;
 
 // Logging types
 export type AuthValidationType = 'none' | 'supabase' | 'static';

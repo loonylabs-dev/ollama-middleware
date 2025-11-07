@@ -1,6 +1,6 @@
 # Architecture Overview
 
-Ollama Middleware follows Clean Architecture principles with clear separation of concerns and dependency inversion.
+LLM Middleware follows Clean Architecture principles with clear separation of concerns and dependency inversion.
 
 ## High-Level Architecture
 
@@ -31,7 +31,7 @@ src/
 │   ├── usecases/             # Business logic layer
 │   │   └── base/             # Base use case classes
 │   ├── services/             # External service integrations
-│   │   ├── ollama/          # Ollama API service
+│   │   ├── llm/             # LLM provider services (Ollama, OpenAI, etc.)
 │   │   ├── json-cleaner/    # JSON processing & repair
 │   │   ├── response-processor/ # AI response processing
 │   │   ├── data-flow-logger/ # Request/response logging
@@ -115,7 +115,7 @@ class ChatUseCase extends BaseAIUseCase<ChatRequest, ChatResult> {
 - Error recovery and retries
 
 **Key Components:**
-- `OllamaService` - Ollama API integration
+- `LLMService` - Multi-provider LLM integration (Ollama, OpenAI, Anthropic, Google)
 - `JsonCleanerService` - AI response processing
 - `DataFlowLoggerService` - Request/response logging
 - `ModelParameterManager` - Model configuration
@@ -145,7 +145,7 @@ abstract class BaseAIUseCase<TRequest, TResult> {
   // Template method
   public async execute(request: TRequest): Promise<TResult> {
     const formatted = this.formatUserMessage(request.prompt);
-    const response = await this.callOllama(formatted);
+    const response = await this.callLLMProvider(formatted);
     const processed = this.processResponse(response);
     return this.createResult(processed, formatted);
   }
@@ -187,7 +187,7 @@ class JsonCleanerOrchestrator {
 Model configuration uses the factory pattern:
 
 ```typescript
-export function getModelConfig(key: ModelConfigKey): OllamaModelConfig {
+export function getModelConfig(key: ModelConfigKey): LLMModelConfig {
   return MODELS[key];
 }
 ```
@@ -213,7 +213,7 @@ class MyUseCase extends BaseAIUseCase<MyRequest, MyResult> {
 ```
 HTTP Request → Controller → Use Case → Services → External APIs
                     ↓           ↓         ↓           ↓
-              Validation → Business → Processing → Ollama API
+              Validation → Business → Processing → LLM Provider APIs
                     ↓        Logic        ↓           ↓
               Client Info → Logging → JSON Clean → Response
                     ↓           ↓         ↓           ↓

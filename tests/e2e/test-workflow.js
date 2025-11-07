@@ -1,4 +1,4 @@
-// Comprehensive End-to-End workflow test for Ollama Middleware
+// Comprehensive End-to-End workflow test for LLM Middleware
 const { CharacterGeneratorUseCase } = require('../../dist/examples/character-generator/character-generator.usecase');
 const { OllamaService } = require('../../dist/middleware/services');
 const { getModelConfig } = require('../../dist/middleware/shared/config/models.config');
@@ -159,13 +159,13 @@ async function runE2ETest() {
     console.log('\n🔗 Phase 7: Integration validation...');
     console.log('   ✅ BaseAIUseCase → executed successfully');
     console.log('   ✅ FlatFormatter → context prepared correctly');
-    console.log('   ✅ OllamaService → API call successful');
+    console.log('   ✅ LLM Provider (Ollama) → API call successful');
     console.log('   ✅ ResponseProcessor → content extracted');
     console.log('   ✅ JsonCleaner → response parsed/repaired');
     console.log('   ✅ Character validation → structure verified');
 
     console.log('\n🎉 End-to-End Test PASSED!');
-    console.log('The complete Ollama Middleware pipeline is working correctly.');
+    console.log('The complete LLM Middleware pipeline is working correctly.');
     
     return {
       success: true,
@@ -239,7 +239,7 @@ async function main() {
     console.log(`✅ Complete workflow test: PASSED (${testResult.duration}ms)`);
     console.log(`✅ JSON repair status: ${testResult.wasRepaired ? 'REPAIRED' : 'CLEAN'}`);
     console.log('✅ Error handling test: PASSED');
-    console.log('\n🎯 The Ollama Middleware is ready for production use!');
+    console.log('\n🎯 The LLM Middleware is ready for production use!');
   } else {
     console.log('\n📈 Final Test Summary:');
     console.log('❌ Complete workflow test: FAILED');

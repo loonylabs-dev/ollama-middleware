@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🚀 Ollama Middleware
+# 🚀 LLM Middleware
 
-*A comprehensive TypeScript middleware library for building robust Ollama-based AI backends with advanced features like JSON cleaning, logging, error handling, and more.*
+*A comprehensive TypeScript middleware library for building robust multi-provider LLM backends with support for Ollama, OpenAI, Anthropic, and Google. Features advanced JSON cleaning, logging, error handling, and more.*
 
 <!-- Horizontal Badge Navigation Bar -->
 [![npm version](https://img.shields.io/npm/v/@loonylabs/llm-middleware.svg?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/@loonylabs/llm-middleware)
@@ -38,7 +38,10 @@
 ## ✨ Features
 
 - 🏗️ **Clean Architecture**: Base classes and interfaces for scalable AI applications
-- 🤖 **Ollama Integration**: Complete service layer with retry logic and authentication
+- 🤖 **Multi-Provider Architecture**: Extensible provider system with strategy pattern
+  - ✅ **Ollama**: Fully supported with comprehensive parameter control
+  - 🔜 **OpenAI, Anthropic, Google**: Planned for future releases
+  - 🔌 **Pluggable**: Easy to add custom providers - see [LLM Providers Guide](docs/LLM_PROVIDERS.md)
 - 🧹 **JSON Cleaning**: Recipe-based JSON repair system with automatic strategy selection
 - 🎨 **FlatFormatter System**: Advanced data formatting for LLM consumption
 - 📊 **Comprehensive Logging**: Multi-level logging with metadata support
@@ -108,6 +111,46 @@ class MyChatUseCase extends BaseAIUseCase<string, MyRequest, MyResult> {
   }
 }
 ```
+
+<details>
+<summary><strong>🔌 Using the Multi-Provider Architecture</strong></summary>
+
+```typescript
+import { llmService, LLMProvider, ollamaProvider } from '@loonylabs/llm-middleware';
+
+// Option 1: Use the LLM Service orchestrator (recommended for flexibility)
+const response1 = await llmService.call(
+  "Write a haiku about coding",
+  {
+    provider: LLMProvider.OLLAMA,  // Explicitly specify provider
+    model: "llama2",
+    temperature: 0.7
+  }
+);
+
+// Option 2: Use provider directly for provider-specific features
+const response2 = await ollamaProvider.callWithSystemMessage(
+  "Write a haiku about coding",
+  "You are a creative poet",
+  {
+    model: "llama2",
+    temperature: 0.7,
+    // Ollama-specific parameters
+    repeat_penalty: 1.1,
+    top_k: 40
+  }
+);
+
+// Set default provider for your application
+llmService.setDefaultProvider(LLMProvider.OLLAMA);
+
+// Now calls use Ollama by default
+const response3 = await llmService.call("Hello!", { model: "llama2" });
+```
+
+For more details on the multi-provider system, see the [LLM Providers Guide](docs/LLM_PROVIDERS.md).
+
+</details>
 
 <details>
 <summary><strong>🎭 Advanced Example with FlatFormatter</strong></summary>
@@ -193,7 +236,7 @@ const result = await profileGen.execute({
 
 - **Node.js** 18+
 - **TypeScript** 4.9+
-- **Ollama server** running (local or remote)
+- **LLM Provider** configured (e.g., Ollama server for Ollama provider)
 
 </details>
 
@@ -212,11 +255,13 @@ NODE_ENV=development
 # Logging
 LOG_LEVEL=info
 
-# Ollama Model Configuration (REQUIRED)
+# LLM Provider Configuration (REQUIRED)
 MODEL1_NAME=phi3:mini              # Required: Your model name
-MODEL1_URL=http://localhost:11434  # Optional: Defaults to localhost
-MODEL1_TOKEN=optional-auth-token   # Optional: For authenticated servers
+MODEL1_URL=http://localhost:11434  # Optional: Defaults to localhost (Ollama)
+MODEL1_TOKEN=optional-auth-token   # Optional: For authenticated providers
 ```
+
+**Multi-Provider Support:** Currently, the middleware is fully integrated with Ollama. The architecture supports multiple providers (OpenAI, Anthropic, Google coming soon). See the [LLM Providers Guide](docs/LLM_PROVIDERS.md) for details on the provider system and how to use or add providers.
 
 </details>
 
@@ -230,7 +275,7 @@ src/
 │   ├── controllers/base/     # Base HTTP controllers
 │   ├── usecases/base/        # Base AI use cases
 │   ├── services/             # External service integrations
-│   │   ├── ollama/          # Ollama API service
+│   │   ├── llm/             # LLM provider services (Ollama, OpenAI, etc.)
 │   │   ├── json-cleaner/    # JSON repair and validation
 │   │   └── response-processor/ # AI response processing
 │   └── shared/              # Common utilities and types
@@ -245,7 +290,8 @@ src/
 
 - [Getting Started Guide](docs/GETTING_STARTED.md)
 - [Architecture Overview](docs/ARCHITECTURE.md)
-- [Ollama Parameters Guide](docs/OLLAMA_PARAMETERS.md) - Complete parameter reference and presets
+- [LLM Providers Guide](docs/LLM_PROVIDERS.md) - Multi-provider architecture and how to use different LLM services
+- [LLM Provider Parameters](docs/OLLAMA_PARAMETERS.md) - Ollama-specific parameter reference and presets
 - [Request Formatting Guide](docs/REQUEST_FORMATTING.md) - FlatFormatter vs RequestFormatterService
 - [Performance Monitoring](docs/PERFORMANCE_MONITORING.md) - Metrics and logging
 - [API Reference](docs/API_REFERENCE.md)
@@ -348,7 +394,7 @@ npm install
 # Copy environment template
 cp .env.example .env
 
-# Start Ollama (if running locally)
+# Start your LLM provider (example for Ollama)
 ollama serve
 
 # Run the example
@@ -494,7 +540,7 @@ console.log(config.baseUrl);  // Value from MODEL1_URL or default localhost
 <details>
 <summary><strong>🎛️ Parameter Configuration</strong></summary>
 
-Ollama-middleware provides fine-grained control over model parameters to optimize output for different use cases:
+LLM-middleware provides fine-grained control over model parameters to optimize output for different use cases:
 
 ```typescript
 import { BaseAIUseCase, ModelParameterOverrides } from '@loonylabs/llm-middleware';
@@ -542,7 +588,7 @@ const marketingParams = ModelParameterManagerService.getDefaultParametersForType
 - 📢 **Marketing**: Advertisements, promotional content
 
 For detailed documentation about all parameters, value ranges, and preset configurations, see:
-**[Ollama Parameters Guide](./docs/OLLAMA_PARAMETERS.md)**
+**[Provider Parameters Guide](./docs/OLLAMA_PARAMETERS.md)** (Ollama-specific)
 
 </details>
 

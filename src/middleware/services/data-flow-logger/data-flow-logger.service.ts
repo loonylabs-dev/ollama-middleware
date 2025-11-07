@@ -60,7 +60,7 @@ export interface DataFlowEntry {
  */
 export class DataFlowLoggerService {
   private static instance: DataFlowLoggerService;
-  private readonly logDir = path.join(process.cwd(), 'logs', 'ollama', 'requests-data-flow');
+  private readonly logDir = path.join(process.cwd(), 'logs', 'llm', 'requests-data-flow');
   private currentRequestId: string | null = null;
   private readonly MAX_ENTRIES_PER_FILE = 1000;
   private contextIdentifierGenerator?: (context: any) => string;

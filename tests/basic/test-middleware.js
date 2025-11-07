@@ -10,7 +10,7 @@ const {
 } = require('../../dist/middleware/services');
 
 (async () => {
-  console.log('🧪 Testing Ollama Middleware Foundation...\n');
+  console.log('🧪 Testing LLM Middleware Foundation...\n');
 
   // Test 1: RequestFormatterService
   console.log('1. Testing RequestFormatterService...');

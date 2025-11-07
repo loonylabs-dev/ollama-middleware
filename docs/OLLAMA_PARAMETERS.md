@@ -1,5 +1,7 @@
 # Ollama Parameter Configuration Guide
 
+> **Note:** This guide is specific to the Ollama provider. LLM Middleware supports multiple providers (Ollama, OpenAI, Anthropic, Google), each with their own parameter configurations. This documentation covers Ollama-specific parameters only.
+
 This guide explains the various parameters available in Ollama for fine-tuning text generation behavior. Proper configuration of these parameters can significantly improve output quality, especially for reducing repetition and encouraging natural, varied language.
 
 ## Table of Contents

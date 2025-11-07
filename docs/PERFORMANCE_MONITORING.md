@@ -105,7 +105,7 @@ All model parameters are logged:
 2025-10-17T10:00:00.000Z INFO     [StoryGeneratorUseCase]: Starting AI use case execution
 
 ================================================================================
-🚀 OLLAMA REQUEST
+🚀 LLM PROVIDER REQUEST
 ================================================================================
 ⏰ Timestamp: 2025-10-17T10:00:00.001Z
 🤖 Model: phi3:mini

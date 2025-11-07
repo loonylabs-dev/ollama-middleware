@@ -1,5 +1,5 @@
 import { ollamaService } from '../../services';
-import { getModelConfig, ModelConfigKey, ValidatedOllamaModelConfig } from '../../shared/config/models.config';
+import { getModelConfig, ModelConfigKey, ValidatedLLMModelConfig } from '../../shared/config/models.config';
 import { ResponseProcessorService } from '../../services/response-processor.service';
 import { BaseAIRequest, BaseAIResult } from '../../shared/types/base-request.types';
 import { logger } from '../../shared/utils/logging.utils';
@@ -42,7 +42,7 @@ export abstract class BaseAIUseCase<
    * Get the model configuration for this use case
    * Returns validated config with guaranteed model name
    */
-  protected get modelConfig(): ValidatedOllamaModelConfig {
+  protected get modelConfig(): ValidatedLLMModelConfig {
     return getModelConfig(this.modelConfigKey);
   }
 
@@ -136,7 +136,7 @@ export abstract class BaseAIUseCase<
       );
 
       if (!result || !result.message) {
-        throw new Error('No response received from the Ollama API');
+        throw new Error('No response received from the LLM provider');
       }
 
       // Process the response using the ResponseProcessorService (async for Recipe System)
