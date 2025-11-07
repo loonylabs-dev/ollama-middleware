@@ -1,5 +1,5 @@
 /**
- * Smoke test for ollama-middleware with MODEL1 configuration
+ * Smoke test for llm-middleware with MODEL1 configuration
  * Tests the enhanced logging and data flow features
  */
 
@@ -53,7 +53,7 @@ async function runSmokeTest() {
   
   try {
     const response = await ollamaService.callOllamaApiWithSystemMessage(
-      'Say "Hello from ollama-middleware test!" in exactly 5 words.',
+      'Say "Hello from llm-middleware test!" in exactly 5 words.',
       'You are a helpful assistant.',
       {
         model: modelConfig.name,

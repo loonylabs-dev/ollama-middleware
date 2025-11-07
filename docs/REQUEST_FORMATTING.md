@@ -31,7 +31,7 @@ Ollama Middleware provides two main tools for formatting data:
 ### Quick Start
 
 ```typescript
-import { FlatFormatter } from 'ollama-middleware';
+import { FlatFormatter } from 'llm-middleware';
 
 const data = { name: 'Alice', age: 30, role: 'Engineer' };
 
@@ -66,7 +66,7 @@ const formatted = FlatFormatter.flatten(data, {
 ### Quick Start
 
 ```typescript
-import { RequestFormatterService } from 'ollama-middleware';
+import { RequestFormatterService } from 'llm-middleware';
 
 const prompt = {
   context: {
@@ -174,7 +174,7 @@ const character = { name: 'Alice', age: 30, role: 'Hero' };
 ✅ You need **preset formatting** for entities
 ```typescript
 // Create your own preset (see examples/flat-formatter-demo/)
-import { BasePreset } from 'ollama-middleware';
+import { BasePreset } from 'llm-middleware';
 class MyEntityPreset extends BasePreset<MyEntity, ProcessedMyEntity> { /* ... */ }
 const formatted = myEntityPreset.formatForLLM(entity);
 ```
@@ -231,7 +231,7 @@ const instruction = RequestFormatterService.extractInstruction(prompt);
 ### Example 1: Data Formatting (FlatFormatter)
 
 ```typescript
-import { FlatFormatter } from 'ollama-middleware';
+import { FlatFormatter } from 'llm-middleware';
 
 class DataFormatterUseCase extends BaseAIUseCase {
   protected formatUserMessage(prompt: any): string {
@@ -261,7 +261,7 @@ class DataFormatterUseCase extends BaseAIUseCase {
 ### Example 2: Story Generator (RequestFormatterService)
 
 ```typescript
-import { RequestFormatterService } from 'ollama-middleware';
+import { RequestFormatterService } from 'llm-middleware';
 
 class StoryGeneratorUseCase extends BaseAIUseCase {
   protected formatUserMessage(prompt: any): string {
@@ -309,7 +309,7 @@ FlatFormatter.flatten({ name: 'Alice' });
 Create your own presets for your domain entities:
 
 ```typescript
-import { BasePreset, ProcessedEntity } from 'ollama-middleware';
+import { BasePreset, ProcessedEntity } from 'llm-middleware';
 
 // Define your entity and processed types
 interface MyEntity { /* ... */ }

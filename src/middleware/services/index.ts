@@ -1,5 +1,5 @@
 // Core Services
-export * from './ollama';
+export * from './llm';
 export * from './json-cleaner';
 export * from './request-formatter';
 export * from './response-processor.service';

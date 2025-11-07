@@ -163,7 +163,7 @@ Write the opening paragraph
 You can use `UseCaseMetricsLoggerService` directly:
 
 ```typescript
-import { UseCaseMetricsLoggerService } from 'ollama-middleware';
+import { UseCaseMetricsLoggerService } from 'llm-middleware';
 
 // Calculate metrics manually
 const metrics = UseCaseMetricsLoggerService.calculateMetrics(
@@ -208,7 +208,7 @@ UseCaseMetricsLoggerService.logCompletion('MyUseCase', metrics);
 The service uses the **TokenEstimatorService** to estimate token counts:
 
 ```typescript
-import { TokenEstimatorService } from 'ollama-middleware';
+import { TokenEstimatorService } from 'llm-middleware';
 
 const systemTokens = TokenEstimatorService.estimateTokenCount(systemMessage);
 const userTokens = TokenEstimatorService.estimateTokenCount(userMessage);

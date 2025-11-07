@@ -206,8 +206,8 @@ These presets are optimized for specific writing tasks. Use them as starting poi
 ### Using Presets in Your Use Case
 
 ```typescript
-import { BaseAIUseCase } from 'ollama-middleware';
-import { ModelParameterOverrides } from 'ollama-middleware';
+import { BaseAIUseCase } from 'llm-middleware';
+import { ModelParameterOverrides } from 'llm-middleware';
 
 class MyUseCase extends BaseAIUseCase<MyRequest, MyResult> {
   protected getParameterOverrides(): ModelParameterOverrides {
@@ -228,7 +228,7 @@ class MyUseCase extends BaseAIUseCase<MyRequest, MyResult> {
 ### Using ModelParameterManagerService Presets
 
 ```typescript
-import { ModelParameterManagerService } from 'ollama-middleware';
+import { ModelParameterManagerService } from 'llm-middleware';
 
 class MyUseCase extends BaseAIUseCase<MyRequest, MyResult> {
   protected getParameterOverrides(): ModelParameterOverrides {

@@ -11,7 +11,7 @@ This guide will help you get up and running with Ollama Middleware in your proje
 ## Installation
 
 ```bash
-npm install ollama-middleware
+npm install llm-middleware
 ```
 
 ## Quick Setup
@@ -42,7 +42,7 @@ import {
   BaseAIUseCase, 
   BaseAIRequest, 
   BaseAIResult 
-} from 'ollama-middleware';
+} from 'llm-middleware';
 
 // Define your interfaces
 interface ChatRequest extends BaseAIRequest<string> {
@@ -90,8 +90,8 @@ class SimpleChatUseCase extends BaseAIUseCase<string, ChatRequest, ChatResult> {
 Create a controller to handle HTTP requests:
 
 ```typescript
-import { BaseController } from 'ollama-middleware';
-import { RequestWithUser } from 'ollama-middleware';
+import { BaseController } from 'llm-middleware';
+import { RequestWithUser } from 'llm-middleware';
 import { Response } from 'express';
 
 class ChatController extends BaseController {
@@ -126,7 +126,7 @@ Set up your Express server:
 ```typescript
 import express from 'express';
 import cors from 'cors';
-import { appConfig, logger } from 'ollama-middleware';
+import { appConfig, logger } from 'llm-middleware';
 
 const app = express();
 const chatController = new ChatController();
@@ -202,7 +202,7 @@ Expected response:
 You can configure multiple models:
 
 ```typescript
-import { getModelConfig } from 'ollama-middleware';
+import { getModelConfig } from 'llm-middleware';
 
 // Get specific model config (throws error if MODEL1_NAME not set)
 const model1 = getModelConfig('MODEL1');
@@ -223,7 +223,7 @@ class MyUseCase extends BaseAIUseCase<MyRequest, MyResult> {
 Control logging behavior:
 
 ```typescript
-import { logger } from 'ollama-middleware';
+import { logger } from 'llm-middleware';
 
 // Different log levels
 await logger.debug('Debug message');
@@ -276,6 +276,6 @@ If you get "model not found" errors:
 
 ## Getting Help
 
-- [Issues](https://github.com/loonylabs-dev/ollama-middleware/issues) - Report bugs or request features
-- [Discussions](https://github.com/loonylabs-dev/ollama-middleware/discussions) - Ask questions
+- [Issues](https://github.com/loonylabs-dev/llm-middleware/issues) - Report bugs or request features
+- [Discussions](https://github.com/loonylabs-dev/llm-middleware/discussions) - Ask questions
 - [Contributing](../CONTRIBUTING.md) - Contribute to the project

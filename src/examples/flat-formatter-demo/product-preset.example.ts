@@ -165,7 +165,7 @@ export class ProductPreset extends BasePreset<Product, ProcessedProduct> {
  * 
  * Usage:
  * ```typescript
- * import { productPreset } from 'ollama-middleware';
+ * import { productPreset } from 'llm-middleware';
  * 
  * const product = {
  *   name: 'Wireless Mouse',

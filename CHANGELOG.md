@@ -5,35 +5,149 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-11-07
+
+### 🚀 Major Release: Multi-Provider Architecture
+
+**BREAKING CHANGE**: Package renamed from `@loonylabs/ollama-middleware` to `@loonylabs/llm-middleware`
+
+This release introduces a complete architectural refactoring to support multiple LLM providers while maintaining backward compatibility with existing Ollama implementations.
+
+### Added
+
+#### Multi-Provider Architecture
+- **Provider Strategy Pattern**: Clean separation between different LLM providers
+- **LLMService Orchestrator**: Unified interface for all LLM providers
+- **Provider-Agnostic Types**: Common interfaces for requests, responses, and debugging
+- **Extensible Design**: Easy to add new providers (OpenAI, Anthropic, Google planned for v2.1+)
+
+#### New Modules
+- `providers/`: Provider implementations
+  - `base-llm-provider.ts`: Abstract base class for all providers
+  - `ollama-provider.ts`: Ollama implementation (previously OllamaService)
+- `types/`: Type definitions
+  - `common.types.ts`: Provider-agnostic types
+  - `ollama.types.ts`: Ollama-specific types
+- `llm.service.ts`: Main orchestrator service
+
+#### Provider-Agnostic Logging
+- Logs now organized by provider: `logs/llm/{provider}/requests/`
+- Debug utilities support multiple providers
+- Environment variables: `DEBUG_LLM_REQUESTS`, `DEBUG_LLM_MINIMAL`, etc.
+
+### Changed
+
+#### Package Name
+- **BREAKING**: Package renamed from `@loonylabs/ollama-middleware` to `@loonylabs/llm-middleware`
+- Repository moved from `ollama-middleware` to `llm-middleware`
+- All documentation updated to reflect multi-provider focus
+
+#### Service Architecture
+- `OllamaService` → `OllamaProvider` (backward compatible exports maintained)
+- New `LLMService` for provider-agnostic access
+- `OllamaDebugger` → `LLMDebugger` (backward compatible)
+
+#### Log Structure
+- Old: `logs/ollama/requests/`
+- New: `logs/llm/ollama/requests/`
+
+### Backward Compatibility
+
+**All existing code continues to work!** The following exports are maintained:
+
+```typescript
+// Old imports still work:
+import { OllamaService, ollamaService } from '@loonylabs/llm-middleware';
+
+// Equivalent new imports:
+import { OllamaProvider, ollamaProvider } from '@loonylabs/llm-middleware';
+```
+
+### Migration Guide
+
+#### For Existing Users (v1.x → v2.0)
+
+**Step 1: Update Package Name**
+```bash
+npm uninstall @loonylabs/ollama-middleware
+npm install @loonylabs/llm-middleware
+```
+
+**Step 2: Update Imports** (Optional - backward compatible)
+```typescript
+// Old (still works):
+import { OllamaService, ollamaService } from '@loonylabs/llm-middleware';
+
+// New (recommended):
+import { OllamaProvider, ollamaProvider } from '@loonylabs/llm-middleware';
+
+// Or use the new LLM Service:
+import { LLMService, llmService } from '@loonylabs/llm-middleware';
+```
+
+**Step 3: Update Environment Variables** (Optional)
+```bash
+# Old:
+DEBUG_OLLAMA_REQUESTS=true
+DEBUG_OLLAMA_MINIMAL=true
+
+# New (backward compatible):
+DEBUG_LLM_REQUESTS=true
+DEBUG_LLM_MINIMAL=true
+```
+
+**No other changes required!** Your existing code will continue to work without modifications.
+
+### Documentation
+
+#### Updated
+- README.md: Multi-provider focus, updated examples
+- GETTING_STARTED.md: New provider architecture
+- All docs: `ollama-middleware` → `llm-middleware`
+
+#### New
+- docs/LLM_PROVIDERS.md: Guide for adding new providers
+- Provider-specific documentation structure
+
+### Roadmap
+
+#### Planned for v2.1+
+- OpenAI Provider implementation
+- Anthropic Claude Provider
+- Google Gemini Provider
+- Unified parameter mapping across providers
+
+---
+
 ## [1.3.0] - 2025-11-01
 
 ### Changed
 
 #### Package Naming & Organization
-- **BREAKING**: Package renamed from `ollama-middleware` to `@loonylabs/ollama-middleware`
+- **BREAKING**: Package renamed from `llm-middleware` to `@loonylabs/llm-middleware`
   - Now part of the @loonylabs npm organization
   - Improved discoverability and branding
-  - All import statements updated: `from '@loonylabs/ollama-middleware'`
+  - All import statements updated: `from '@loonylabs/llm-middleware'`
 
 #### Documentation
 - **README**: Updated all npm badges and links to use scoped package name
-- **README**: Updated installation instructions to use `@loonylabs/ollama-middleware`
+- **README**: Updated installation instructions to use `@loonylabs/llm-middleware`
 - **README**: Updated all code examples with new import statements
 
 ### Migration Guide
 
-To upgrade from `ollama-middleware` to `@loonylabs/ollama-middleware`:
+To upgrade from `llm-middleware` to `@loonylabs/llm-middleware`:
 
 1. Update your `package.json`:
    ```diff
-   - "ollama-middleware": "^1.2.1"
-   + "@loonylabs/ollama-middleware": "^1.3.0"
+   - "llm-middleware": "^1.2.1"
+   + "@loonylabs/llm-middleware": "^1.3.0"
    ```
 
 2. Update all import statements in your code:
    ```diff
-   - import { BaseAIUseCase } from 'ollama-middleware';
-   + import { BaseAIUseCase } from '@loonylabs/ollama-middleware';
+   - import { BaseAIUseCase } from 'llm-middleware';
+   + import { BaseAIUseCase } from '@loonylabs/llm-middleware';
    ```
 
 3. Run `npm install` to install the new package
@@ -53,7 +167,7 @@ To upgrade from `ollama-middleware` to `@loonylabs/ollama-middleware`:
 
 #### Distribution & Publishing
 - **npm Publication**: Package now available on npm registry
-  - Install via `npm install ollama-middleware`
+  - Install via `npm install llm-middleware`
   - Optimized package size (only production files included)
   - `prepublishOnly` script ensures build and tests run before publishing
   - Added `.env.example` to package files for configuration reference
@@ -320,7 +434,7 @@ const detailed = await ResponseProcessorService.processResponseDetailed(response
 
 ## Links
 
-- [GitHub Repository](https://github.com/loonylabs-dev/ollama-middleware)
-- [Documentation](https://github.com/loonylabs-dev/ollama-middleware/docs)
-- [Issues](https://github.com/loonylabs-dev/ollama-middleware/issues)
-- [Discussions](https://github.com/loonylabs-dev/ollama-middleware/discussions)
+- [GitHub Repository](https://github.com/loonylabs-dev/llm-middleware)
+- [Documentation](https://github.com/loonylabs-dev/llm-middleware/docs)
+- [Issues](https://github.com/loonylabs-dev/llm-middleware/issues)
+- [Discussions](https://github.com/loonylabs-dev/llm-middleware/discussions)

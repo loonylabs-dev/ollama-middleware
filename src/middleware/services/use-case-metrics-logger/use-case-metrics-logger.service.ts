@@ -145,7 +145,7 @@ export class UseCaseMetricsLoggerService {
   ): UseCaseMetrics {
     const executionTimeSeconds = (Date.now() - startTime) / 1000;
     
-    // Estimate token counts using ollama-middleware's TokenEstimatorService
+    // Estimate token counts using llm-middleware's TokenEstimatorService
     const inputEstimate = TokenEstimatorService.estimateInputTokens(systemMessage, userPrompt);
     const outputEstimate = TokenEstimatorService.estimateTokenCount(response);
     

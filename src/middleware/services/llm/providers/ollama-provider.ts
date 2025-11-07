@@ -1,52 +1,25 @@
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
-import { logger } from '../../shared/utils/logging.utils';
-import { appConfig } from '../../shared/config/app.config';
-import { OllamaDebugger, OllamaDebugInfo } from './utils/debug-ollama.utils';
-import { DataFlowLoggerService } from '../data-flow-logger';
-
-export interface OllamaResponse {
-  message: {
-    content: string;
-  };
-  sessionId?: string;
-}
-
-export interface OllamaRequestOptions {
-  authToken?: string;
-  model?: string;
-  temperature?: number;
-  baseUrl?: string;
-  // Advanced parameters
-  repeat_penalty?: number;
-  top_p?: number;
-  top_k?: number;
-  frequency_penalty?: number;
-  presence_penalty?: number;
-  repeat_last_n?: number;
-  num_predict?: number;
-  // Debug context
-  debugContext?: string;
-  // Session ID for conversation continuity
-  sessionId?: string;
-  // Chapter and page context for book generation
-  chapterNumber?: number;
-  pageNumber?: number;
-  pageName?: string;
-}
+import { logger } from '../../../shared/utils/logging.utils';
+import { BaseLLMProvider } from './base-llm-provider';
+import { LLMProvider, CommonLLMResponse } from '../types';
+import { OllamaRequestOptions, OllamaResponse } from '../types/ollama.types';
+import { LLMDebugger, LLMDebugInfo } from '../utils/debug-llm.utils';
+import { DataFlowLoggerService } from '../../data-flow-logger';
 
 /**
- * Complete Ollama service with advanced features:
+ * Ollama provider implementation with advanced features:
  * - Comprehensive debugging and logging
  * - Retry logic with authentication fallbacks
  * - Session management
  * - Parameter handling
  * - Error recovery strategies
  */
-export class OllamaService {
+export class OllamaProvider extends BaseLLMProvider {
   private dataFlowLogger: DataFlowLoggerService;
-  
+
   constructor() {
+    super(LLMProvider.OLLAMA);
     this.dataFlowLogger = DataFlowLoggerService.getInstance();
   }
 
@@ -57,14 +30,14 @@ export class OllamaService {
    * @param options - Options for the API call (including token and sessionId)
    * @returns The API response or null on error
    */
-  public async callOllamaApiWithSystemMessage(
+  public async callWithSystemMessage(
     userPrompt: string,
     systemMessage: string,
     options: OllamaRequestOptions = {}
-  ): Promise<OllamaResponse | null> {
-    const { 
-      authToken, 
-      model, 
+  ): Promise<CommonLLMResponse | null> {
+    const {
+      authToken,
+      model,
       temperature = 0.7,
       baseUrl = process.env.MODEL1_URL || "http://localhost:11434",
       repeat_penalty,
@@ -80,7 +53,7 @@ export class OllamaService {
       pageNumber,
       pageName
     } = options;
-    
+
     // Validate that model is provided
     if (!model) {
       throw new Error(
@@ -88,11 +61,11 @@ export class OllamaService {
         'Please ensure MODEL1_NAME is set in your .env file or pass model explicitly in options.'
       );
     }
-    
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json'
     };
-    
+
     if (authToken) {
       headers['Authorization'] = `Bearer ${authToken}`;
     }
@@ -132,8 +105,9 @@ export class OllamaService {
     }
 
     // Prepare debug info
-    const debugInfo: OllamaDebugInfo = {
+    const debugInfo: LLMDebugInfo = {
       timestamp: new Date(),
+      provider: this.providerName,
       model: model,
       baseUrl: baseUrl,
       systemMessage: systemMessage,
@@ -148,17 +122,17 @@ export class OllamaService {
     };
 
     // Log request
-    await OllamaDebugger.logRequest(debugInfo);
-    
+    await LLMDebugger.logRequest(debugInfo);
+
     // Log to data flow logger
     const contextForLogger = {
       currentChapterNr: chapterNumber,
       currentPage: pageNumber,
       debugContext
     };
-    
+
     const requestId = this.dataFlowLogger.startRequest(debugContext || 'ollama-direct', contextForLogger);
-    
+
     this.dataFlowLogger.logLLMRequest(
       {
         stage: debugContext || 'ollama-direct',
@@ -187,10 +161,10 @@ export class OllamaService {
     );
 
     const requestStartTime = Date.now();
-    
+
     try {
       logger.info('Sending request to Ollama API', {
-        context: 'OllamaService',
+        context: 'OllamaProvider',
         metadata: {
           url: `${baseUrl}/api/chat`,
           model: model,
@@ -198,33 +172,41 @@ export class OllamaService {
           promptLength: userPrompt.length
         }
       });
-      
-      const response = await axios.post(`${baseUrl}/api/chat`, data, { 
+
+      const response = await axios.post(`${baseUrl}/api/chat`, data, {
         headers,
         timeout: 90000 // 90 second timeout
       });
       const requestDuration = Date.now() - requestStartTime;
-      
+
       if (response && response.status === 200) {
-        const aiResponse = response.data;
-        
+        const aiResponse: OllamaResponse = response.data;
+
         // Add session ID to response
         aiResponse.sessionId = sessionId;
-        
+
+        // Add metadata
+        aiResponse.metadata = {
+          provider: this.providerName,
+          model: model,
+          tokensUsed: aiResponse.eval_count,
+          processingTime: requestDuration
+        };
+
         // Add response info
         debugInfo.responseTimestamp = new Date();
         debugInfo.response = aiResponse.message.content;
         debugInfo.rawResponseData = aiResponse;
-        
+
         // Try to extract thinking content
         const thinkMatch = aiResponse.message.content.match(/<think>([\s\S]*?)<\/think>/);
         if (thinkMatch && thinkMatch[1]) {
           debugInfo.thinking = thinkMatch[1].trim();
         }
-        
+
         // Log response (including markdown saving)
-        await OllamaDebugger.logResponse(debugInfo);
-        
+        await LLMDebugger.logResponse(debugInfo);
+
         // Log to data flow logger
         this.dataFlowLogger.logLLMResponse(
           debugContext || 'ollama-direct',
@@ -235,7 +217,7 @@ export class OllamaService {
           contextForLogger,
           requestId
         );
-        
+
         return aiResponse;
       } else {
         const error = new Error(`Status ${response?.status || 'unknown'}`);
@@ -244,7 +226,7 @@ export class OllamaService {
           error: error.message,
           metadata: response?.data || {}
         });
-        
+
         // Log error to data flow logger
         this.dataFlowLogger.logLLMResponse(
           debugContext || 'ollama-direct',
@@ -256,36 +238,36 @@ export class OllamaService {
           contextForLogger,
           requestId
         );
-        
+
         return null;
       }
     } catch (error: unknown) {
       // Type-safe error handling
       let errorMessage = 'Unknown error';
       let errorDetails: Record<string, any> = {};
-      
+
       if (error instanceof Error) {
         errorMessage = error.message;
       }
-      
+
       // Check for Axios error and safely extract properties
       if (
-        error && 
-        typeof error === 'object' && 
-        'isAxiosError' in error && 
+        error &&
+        typeof error === 'object' &&
+        'isAxiosError' in error &&
         error.isAxiosError === true
       ) {
         const axiosError = error as any;
-        
+
         if (axiosError.response) {
           errorDetails = {
             statusCode: axiosError.response.status,
             statusText: axiosError.response.statusText,
             data: axiosError.response.data
           };
-          
+
           // Check for session ID related errors
-          if (axiosError.response.status === 400 && 
+          if (axiosError.response.status === 400 &&
               typeof axiosError.response.data === 'object' &&
               axiosError.response.data?.error?.includes('session_id')) {
             logger.warn('Session ID not supported in this Ollama version', {
@@ -293,7 +275,7 @@ export class OllamaService {
               error: axiosError.response.data?.error,
               metadata: { sessionId }
             });
-            
+
             // Retry without session_id
             try {
               const retryResponse = await axios.post(`${baseUrl}/api/chat`, baseData, { headers });
@@ -301,18 +283,18 @@ export class OllamaService {
                 const aiResponse = retryResponse.data;
                 // Add session ID for internal tracking anyway
                 aiResponse.sessionId = sessionId;
-                
+
                 debugInfo.responseTimestamp = new Date();
                 debugInfo.response = aiResponse.message.content;
                 debugInfo.rawResponseData = aiResponse;
-                
+
                 const thinkMatch = aiResponse.message.content.match(/<think>([\s\S]*?)<\/think>/);
                 if (thinkMatch && thinkMatch[1]) {
                   debugInfo.thinking = thinkMatch[1].trim();
                 }
-                
-                await OllamaDebugger.logResponse(debugInfo);
-                
+
+                await LLMDebugger.logResponse(debugInfo);
+
                 // Log successful retry to data flow logger
                 this.dataFlowLogger.logLLMResponse(
                   debugContext || 'ollama-direct',
@@ -323,7 +305,7 @@ export class OllamaService {
                   contextForLogger,
                   requestId
                 );
-                
+
                 return aiResponse;
               }
             } catch (retryError) {
@@ -334,7 +316,7 @@ export class OllamaService {
               });
             }
           }
-          
+
           // Check for auth errors specifically
           if (axiosError.response.status === 401 || axiosError.response.status === 403) {
             logger.error('Authentication error with Ollama API', {
@@ -355,9 +337,9 @@ export class OllamaService {
                   'Content-Type': 'application/json',
                   'Authorization': authToken
                 };
-                const retryRaw = await axios.post(`${baseUrl}/api/chat`, baseData, { 
-                  headers: headersRawAuth, 
-                  timeout: 90000 
+                const retryRaw = await axios.post(`${baseUrl}/api/chat`, baseData, {
+                  headers: headersRawAuth,
+                  timeout: 90000
                 });
                 if (retryRaw && retryRaw.status === 200) {
                   return this.handleSuccessfulResponse(retryRaw.data, debugInfo, sessionId, requestStartTime, debugContext, contextForLogger, requestId);
@@ -377,9 +359,9 @@ export class OllamaService {
                   'Content-Type': 'application/json',
                   'X-API-Key': authToken
                 };
-                const retryApiKey = await axios.post(`${baseUrl}/api/chat`, baseData, { 
-                  headers: headersApiKey, 
-                  timeout: 90000 
+                const retryApiKey = await axios.post(`${baseUrl}/api/chat`, baseData, {
+                  headers: headersApiKey,
+                  timeout: 90000
                 });
                 if (retryApiKey && retryApiKey.status === 200) {
                   return this.handleSuccessfulResponse(retryApiKey.data, debugInfo, sessionId, requestStartTime, debugContext, contextForLogger, requestId);
@@ -395,9 +377,9 @@ export class OllamaService {
             // 3) No auth (for dev instances)
             try {
               const headersNoAuth: Record<string, string> = { 'Content-Type': 'application/json' };
-              const retryAuthless = await axios.post(`${baseUrl}/api/chat`, baseData, { 
-                headers: headersNoAuth, 
-                timeout: 90000 
+              const retryAuthless = await axios.post(`${baseUrl}/api/chat`, baseData, {
+                headers: headersNoAuth,
+                timeout: 90000
               });
               if (retryAuthless && retryAuthless.status === 200) {
                 return this.handleSuccessfulResponse(retryAuthless.data, debugInfo, sessionId, requestStartTime, debugContext, contextForLogger, requestId);
@@ -411,7 +393,7 @@ export class OllamaService {
           }
         }
       }
-      
+
       logger.error('Error in API request', {
         context: this.constructor.name,
         error: errorMessage,
@@ -422,7 +404,7 @@ export class OllamaService {
           sessionId: sessionId
         }
       });
-      
+
       // Log error to data flow logger
       this.dataFlowLogger.logLLMResponse(
         debugContext || 'ollama-direct',
@@ -434,23 +416,23 @@ export class OllamaService {
         contextForLogger,
         requestId
       );
-      
+
       // Add error info
       debugInfo.responseTimestamp = new Date();
       debugInfo.error = {
         message: errorMessage,
         details: errorDetails
       };
-      
+
       // Log error
-      await OllamaDebugger.logError(debugInfo);
-      
+      await LLMDebugger.logError(debugInfo);
+
       // Check for memory errors in response
       const errorResponseData = errorDetails.data;
       if (
-        errorResponseData && 
+        errorResponseData &&
         typeof errorResponseData === 'object' &&
-        'error' in errorResponseData && 
+        'error' in errorResponseData &&
         typeof errorResponseData.error === 'string'
       ) {
         const errorText = errorResponseData.error;
@@ -461,7 +443,7 @@ export class OllamaService {
           throw new Error(`Insufficient memory to load model ${model}. Try closing other applications or using a smaller model.`);
         }
       }
-      
+
       return null;
     }
   }
@@ -470,9 +452,9 @@ export class OllamaService {
    * Helper method to handle successful responses consistently
    */
   private async handleSuccessfulResponse(
-    aiResponse: any, 
-    debugInfo: OllamaDebugInfo, 
-    sessionId: string, 
+    aiResponse: any,
+    debugInfo: LLMDebugInfo,
+    sessionId: string,
     requestStartTime: number,
     debugContext: string | undefined,
     contextForLogger: any,
@@ -482,14 +464,14 @@ export class OllamaService {
     debugInfo.responseTimestamp = new Date();
     debugInfo.response = aiResponse.message.content;
     debugInfo.rawResponseData = aiResponse;
-    
+
     const thinkMatch = aiResponse.message.content.match(/<think>([\s\S]*?)<\/think>/);
     if (thinkMatch && thinkMatch[1]) {
       debugInfo.thinking = thinkMatch[1].trim();
     }
-    
-    await OllamaDebugger.logResponse(debugInfo);
-    
+
+    await LLMDebugger.logResponse(debugInfo);
+
     this.dataFlowLogger.logLLMResponse(
       debugContext || 'ollama-direct',
       {
@@ -499,23 +481,35 @@ export class OllamaService {
       contextForLogger,
       requestId
     );
-    
+
     return aiResponse;
   }
 
   /**
-   * Call the Ollama API with default system message
-   * @param prompt - The prompt for the model
-   * @param options - Options for the API call (including token and sessionId)
-   * @returns The API response or null on error
+   * Backward compatibility: Old method name
    */
-  public async callOllamaApi(
-    prompt: string, 
+  public async callOllamaApiWithSystemMessage(
+    userPrompt: string,
+    systemMessage: string,
     options: OllamaRequestOptions = {}
   ): Promise<OllamaResponse | null> {
-    const defaultSystemMessage = "You are a helpful assistant, who provides clear and precise answers.";
-    return this.callOllamaApiWithSystemMessage(prompt, defaultSystemMessage, options);
+    return this.callWithSystemMessage(userPrompt, systemMessage, options) as Promise<OllamaResponse | null>;
+  }
+
+  /**
+   * Backward compatibility: Old method name
+   */
+  public async callOllamaApi(
+    prompt: string,
+    options: OllamaRequestOptions = {}
+  ): Promise<OllamaResponse | null> {
+    return this.call(prompt, options) as Promise<OllamaResponse | null>;
   }
 }
 
-export const ollamaService = new OllamaService();
+// Export singleton instance for backward compatibility
+export const ollamaProvider = new OllamaProvider();
+
+// Backward compatibility aliases
+export { OllamaProvider as OllamaService };
+export { ollamaProvider as ollamaService };

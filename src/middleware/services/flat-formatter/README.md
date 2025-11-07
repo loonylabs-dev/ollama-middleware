@@ -13,7 +13,7 @@ A powerful utility for converting complex objects into flat, readable text forma
 ## Quick Start
 
 ```typescript
-import { FlatFormatter } from 'ollama-middleware';
+import { FlatFormatter } from 'llm-middleware';
 
 const data = {
   name: 'Alice',
@@ -146,7 +146,7 @@ Presets encapsulate preprocessing logic for domain entities.
 ### Using the Example Preset
 
 ```typescript
-import { personPreset } from 'ollama-middleware';
+import { personPreset } from 'llm-middleware';
 
 const person = {
   name: 'Alice',
@@ -168,7 +168,7 @@ const formatted = personPreset.formatForLLM(person, "## USER PROFILE:");
 #### Simple Preset Example
 
 ```typescript
-import { BasePreset } from 'ollama-middleware';
+import { BasePreset } from 'llm-middleware';
 
 // For simple entities
 class MyEntityPreset extends BasePreset<MyEntity, ProcessedMyEntity> {

@@ -312,4 +312,4 @@ Benefits of the Recipe System:
 
 ## Credits
 
-Developed for the ollama-middleware project to provide robust JSON cleaning capabilities for LLM responses.
+Developed for the llm-middleware project to provide robust JSON cleaning capabilities for LLM responses.

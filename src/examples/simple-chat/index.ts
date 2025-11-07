@@ -32,7 +32,7 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    service: 'ollama-middleware-example'
+    service: 'llm-middleware-example'
   });
 });
 

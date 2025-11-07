@@ -1,4 +1,4 @@
-import { ollamaService } from '../../services/ollama/ollama.service';
+import { ollamaService } from '../../services';
 import { getModelConfig, ModelConfigKey, ValidatedOllamaModelConfig } from '../../shared/config/models.config';
 import { ResponseProcessorService } from '../../services/response-processor.service';
 import { BaseAIRequest, BaseAIResult } from '../../shared/types/base-request.types';

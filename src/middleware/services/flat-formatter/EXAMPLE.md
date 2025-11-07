@@ -18,7 +18,7 @@ Comprehensive examples demonstrating all FlatFormatter capabilities.
 ### Simple Object Formatting
 
 ```typescript
-import { FlatFormatter } from 'ollama-middleware';
+import { FlatFormatter } from 'llm-middleware';
 
 const user = {
   name: 'Alice Johnson',
@@ -248,7 +248,7 @@ total: 100.00
 ### Creating a Simple Preset
 
 ```typescript
-import { BasePreset } from 'ollama-middleware';
+import { BasePreset } from 'llm-middleware';
 
 interface SimpleProduct {
   name?: string;
@@ -283,7 +283,7 @@ class SimpleProductPreset extends BasePreset<SimpleProduct, ProcessedSimpleProdu
 The middleware includes **ProductPreset** demonstrating advanced techniques:
 
 ```typescript
-import { productPreset, Product } from 'ollama-middleware';
+import { productPreset, Product } from 'llm-middleware';
 
 const product: Product = {
   name: 'Wireless Gaming Mouse',

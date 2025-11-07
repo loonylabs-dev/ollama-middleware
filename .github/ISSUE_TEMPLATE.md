@@ -36,7 +36,7 @@ A clear and concise description of what actually happened.
 ## Environment
 - Node.js version:
 - npm version:
-- ollama-middleware version:
+- llm-middleware version:
 - Operating System:
 - Ollama version (if applicable):
 

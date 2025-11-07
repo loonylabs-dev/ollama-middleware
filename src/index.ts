@@ -1,2 +1,2 @@
-// Main export file for the ollama-middleware package
+// Main export file for the llm-middleware package
 export * from './middleware';

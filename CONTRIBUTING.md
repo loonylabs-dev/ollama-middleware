@@ -19,9 +19,9 @@ We use GitHub to sync code, track issues and feature requests, as well as accept
 
 In short, when you submit code changes, your submissions are understood to be under the same [MIT License](http://choosealicense.com/licenses/mit/) that covers the project.
 
-## Report bugs using GitHub's [issue tracker](https://github.com/loonylabs-dev/ollama-middleware/issues)
+## Report bugs using GitHub's [issue tracker](https://github.com/loonylabs-dev/llm-middleware/issues)
 
-We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/loonylabs-dev/ollama-middleware/issues/new).
+We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/loonylabs-dev/llm-middleware/issues/new).
 
 ## Write bug reports with detail, background, and sample code
 
@@ -39,8 +39,8 @@ We use GitHub issues to track public bugs. Report a bug by [opening a new issue]
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/loonylabs-dev/ollama-middleware.git
-   cd ollama-middleware
+   git clone https://github.com/loonylabs-dev/llm-middleware.git
+   cd llm-middleware
    ```
 
 2. Install dependencies:
