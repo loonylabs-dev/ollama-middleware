@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2025-11-08
+
+### 🐛 Bug Fix: JSON Array Extraction Support
+
+This release fixes a critical bug in the JsonExtractor parser where JSON arrays were not properly extracted from LLM responses.
+
+### Fixed
+
+#### JsonExtractor Parser (`src/middleware/services/json-cleaner/parsers/json-extractor.parser.ts`)
+- **Array Extraction Bug**: The `extractJsonBlock()` method only searched for objects `{...}`, causing it to extract only the first object from arrays `[{...}, {...}]` instead of the complete array
+  - Now properly handles both objects `{...}` and arrays `[...]`
+  - Maintains separate counters for braces and brackets to correctly identify complete JSON structures
+  - Tracks the starting character (`{` or `[`) to ensure matching closing character
+
+- **Pattern Matching Enhancement**: The `extractByPattern()` method now includes array-specific patterns
+  - Added Pattern 2: JSON array after "response:", "result:", etc.
+  - Added Pattern 4: JSON array in the middle of text
+  - Both patterns complement existing object patterns
+
+### Impact
+
+This fix resolves issues where:
+- LLM responses containing JSON arrays were truncated to single objects
+- Array-based use cases (e.g., generating multiple narrative structures) failed silently
+- Fallback to legacy orchestrator was triggered unnecessarily
+
+### Tests Added
+
+- `tests/unit/json-cleaner/json-extractor-array.test.ts`: Comprehensive test suite for array extraction
+  - Simple array extraction
+  - Markdown-wrapped arrays
+  - Complex nested arrays (real-world narrative data)
+  - Arrays with surrounding text
+
+### Compatibility
+
+- **No Breaking Changes**: This is a pure bug fix
+- All existing tests continue to pass (180/182 unit tests passing)
+- Backward compatible with all existing use cases
+
+---
+
 ## [2.3.0] - 2025-11-08
 
 ### 🔧 Enhanced Extensibility: Custom Model Configuration Provider

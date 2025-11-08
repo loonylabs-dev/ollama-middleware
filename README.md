@@ -44,6 +44,7 @@
   - 🔜 **OpenAI, Google**: Planned for future releases
   - 🔌 **Pluggable**: Easy to add custom providers - see [LLM Providers Guide](docs/LLM_PROVIDERS.md)
 - 🧹 **JSON Cleaning**: Recipe-based JSON repair system with automatic strategy selection
+  - ✨ **v2.4.0**: Enhanced array extraction support - properly handles JSON arrays `[...]` in addition to objects `{...}`
 - 🎨 **FlatFormatter System**: Advanced data formatting for LLM consumption
 - 📊 **Comprehensive Logging**: Multi-level logging with metadata support
 - ⚙️ **Configuration Management**: Flexible model and application configuration
