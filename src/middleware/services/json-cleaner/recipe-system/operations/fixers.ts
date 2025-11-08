@@ -232,7 +232,26 @@ export class MissingCommaFixer extends BaseFixer {
   }
 
   shouldApply(context: CleaningContext): boolean {
+    // Only apply if:
+    // 1. Missing comma was explicitly detected, OR
+    // 2. JSON is currently invalid AND there are signs of missing commas
+    const isCurrentlyValid = this.isValidJSON(context.currentJson);
+
+    if (isCurrentlyValid) {
+      // Never modify already valid JSON
+      return false;
+    }
+
     return context.hasDetection('missing_comma') || this.hasMissingCommas(context.currentJson);
+  }
+
+  private isValidJSON(json: string): boolean {
+    try {
+      JSON.parse(json);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private hasMissingCommas(json: string): boolean {
