@@ -77,7 +77,7 @@ npm install github:loonylabs-dev/llm-middleware#v1.3.0
 ### Basic Usage
 
 ```typescript
-import { BaseAIUseCase, BaseAIRequest, BaseAIResult } from '@loonylabs/llm-middleware';
+import { BaseAIUseCase, BaseAIRequest, BaseAIResult, LLMProvider } from '@loonylabs/llm-middleware';
 
 // Define your request/response interfaces
 interface MyRequest extends BaseAIRequest<string> {
@@ -88,19 +88,19 @@ interface MyResult extends BaseAIResult {
   response: string;
 }
 
-// Create your use case
+// Create your use case (uses Ollama by default)
 class MyChatUseCase extends BaseAIUseCase<string, MyRequest, MyResult> {
   protected readonly systemMessage = "You are a helpful assistant.";
-  
+
   // Required: return user message template function
   protected getUserTemplate(): (formattedPrompt: string) => string {
     return (message) => message;
   }
-  
+
   protected formatUserMessage(prompt: any): string {
     return typeof prompt === 'string' ? prompt : prompt.message;
   }
-  
+
   protected createResult(content: string, usedPrompt: string, thinking?: string): MyResult {
     return {
       generatedContent: content,
@@ -109,6 +109,13 @@ class MyChatUseCase extends BaseAIUseCase<string, MyRequest, MyResult> {
       thinking: thinking,
       response: content
     };
+  }
+}
+
+// Switch to different provider (optional)
+class MyAnthropicChatUseCase extends MyChatUseCase {
+  protected getProvider(): LLMProvider {
+    return LLMProvider.ANTHROPIC;  // Use Claude instead of Ollama
   }
 }
 ```

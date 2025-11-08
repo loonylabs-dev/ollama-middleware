@@ -38,10 +38,11 @@ MODEL1_TOKEN=your-token-here        # Optional: For authenticated providers
 Create your first AI use case:
 
 ```typescript
-import { 
-  BaseAIUseCase, 
-  BaseAIRequest, 
-  BaseAIResult 
+import {
+  BaseAIUseCase,
+  BaseAIRequest,
+  BaseAIResult,
+  LLMProvider  // Import for provider selection
 } from 'llm-middleware';
 
 // Define your interfaces
@@ -53,10 +54,10 @@ interface ChatResult extends BaseAIResult {
   response: string;
 }
 
-// Implement your use case
+// Implement your use case (uses Ollama by default)
 class SimpleChatUseCase extends BaseAIUseCase<string, ChatRequest, ChatResult> {
   protected readonly systemMessage = \`
-    You are a helpful AI assistant. 
+    You are a helpful AI assistant.
     Provide clear and concise responses.
   \`;
 
@@ -70,8 +71,8 @@ class SimpleChatUseCase extends BaseAIUseCase<string, ChatRequest, ChatResult> {
   }
 
   protected createResult(
-    content: string, 
-    usedPrompt: string, 
+    content: string,
+    usedPrompt: string,
     thinking?: string
   ): ChatResult {
     return {
@@ -83,7 +84,16 @@ class SimpleChatUseCase extends BaseAIUseCase<string, ChatRequest, ChatResult> {
     };
   }
 }
+
+// Use a different provider (e.g., Anthropic Claude)
+class AnthropicChatUseCase extends SimpleChatUseCase {
+  protected getProvider(): LLMProvider {
+    return LLMProvider.ANTHROPIC;  // Override to use Claude
+  }
+}
 ```
+
+**Provider Selection:** Override `getProvider()` to use different LLM providers (Ollama, Anthropic, OpenAI, Google). Default is Ollama.
 
 ### 3. Controller Implementation
 

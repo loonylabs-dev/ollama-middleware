@@ -6,7 +6,7 @@ Complete testing documentation for all test categories, from unit tests to end-t
 
 | Test Command | Category | Provider Required | Description |
 |-------------|----------|-------------------|-------------|
-| `npm run test:unit` | Unit | ❌ No | Jest unit tests (114 tests) |
+| `npm run test:unit` | Unit | ❌ No | Jest unit tests (118 tests) |
 | `npm run test:unit:watch` | Unit | ❌ No | Jest watch mode for development |
 | `npm run test:unit:coverage` | Unit | ❌ No | Jest with coverage report |
 | `npm run test:basic` | Component | ❌ No | Basic middleware services validation |
@@ -77,6 +77,7 @@ npm run test:all && npm run test:e2e
 │   ├── /json-cleaner  # Recipe system unit tests
 │   ├── /messages      # Message template tests
 │   ├── /services      # Service layer tests
+│   ├── /usecases      # Use case tests (BaseAIUseCase, provider selection)
 │   └── /utils         # Utility function tests
 ├── /basic             # Component-level tests (JavaScript)
 │   └── test-middleware.js
@@ -118,11 +119,12 @@ npm run test:all && npm run test:e2e
 - Control Character Diagnostics (11 tests)
 - Validation Utils (12 tests)
 - JSON Cleaner Recipe System (5 tests)
+- BaseAIUseCase Provider Selection (4 tests)
 
 **Expected Results**:
 ```
-Test Suites: 13 passed, 13 total
-Tests:       114 passed, 114 total
+Test Suites: 14 passed, 14 total
+Tests:       118 passed, 118 total
 Coverage:    70%+ (lines, functions, branches, statements)
 ```
 

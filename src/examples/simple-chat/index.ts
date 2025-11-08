@@ -7,6 +7,10 @@ import { logger } from '../../middleware/shared/utils/logging.utils';
 import { RequestWithUser } from '../../middleware/shared/types/base-request.types';
 import { Request, Response, NextFunction } from 'express';
 
+// Export use cases for library users
+export { SimpleChatUseCase } from './chat.usecase';
+export { AnthropicChatUseCase } from './anthropic-chat.usecase';
+
 // Load environment variables
 dotenv.config();
 
