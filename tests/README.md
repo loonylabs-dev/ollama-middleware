@@ -6,7 +6,7 @@ Complete testing documentation for all test categories, from unit tests to end-t
 
 | Test Command | Category | Provider Required | Description |
 |-------------|----------|-------------------|-------------|
-| `npm run test:unit` | Unit | ❌ No | Jest unit tests (182 tests) |
+| `npm run test:unit` | Unit | ❌ No | Jest unit tests (186 tests) |
 | `npm run test:unit:watch` | Unit | ❌ No | Jest watch mode for development |
 | `npm run test:unit:coverage` | Unit | ❌ No | Jest with coverage report |
 | `npm run test:basic` | Component | ❌ No | Basic middleware services validation |

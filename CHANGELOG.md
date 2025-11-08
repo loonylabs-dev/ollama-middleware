@@ -5,6 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2025-11-08
+
+### 🔧 Enhancement: Recipe System Optimization for Arrays
+
+This release fixes a critical issue in the Recipe System where the MissingCommaFixer corrupted valid JSON arrays during processing.
+
+### Fixed
+
+#### Recipe System - MissingCommaFixer (`src/middleware/services/json-cleaner/recipe-system/operations/fixers.ts`)
+- **Invalid JSON Modification**: The `shouldApply()` method was too aggressive, running on already-valid JSON
+  - Regex patterns for missing comma detection matched valid multi-line JSON formatting
+  - Resulted in adding unnecessary commas to valid arrays, breaking them
+  - Example: Complex nested arrays from LLM responses were corrupted during Recipe processing
+
+**Solution**:
+- Added validity check in `shouldApply()`: Now tests if JSON is already valid before applying fixes
+- Fixers only run on invalid JSON, never modify valid JSON
+- Ensures Recipe System prioritizes preservation over modification
+
+### Impact
+
+**Before v2.5.0**:
+- Recipe System failed on large/complex arrays (fell back to JsonExtractor)
+- 2 tests skipped in v2.4.0
+
+**After v2.5.0**:
+- Recipe System (aggressive/adaptive) handles arrays perfectly
+- **186/186 unit tests pass** (was 180/182 in v2.4.0)
+- No fallback needed - Recipe System is now primary path for all JSON types
+
+### Tests Fixed
+
+Re-enabled and now passing:
+- ✅ `should extract complex JSON array with aggressive recipe`
+- ✅ `should extract complex JSON array from markdown code block (real-world narrative data)`
+
+### Tests Added
+
+- `tests/unit/json-cleaner/debug-recipe-steps.test.ts`
+  - Step-by-step fixer validation
+  - Identified MissingCommaFixer as root cause
+  - Ensures each Recipe step preserves valid JSON
+
+### Compatibility
+
+- **No Breaking Changes**: Pure enhancement
+- All v2.4.0 functionality preserved
+- Recipe System now preferred over fallback for all JSON types
+- Backward compatible with all existing use cases
+
+---
+
 ## [2.4.0] - 2025-11-08
 
 ### 🐛 Bug Fix: JSON Array Extraction Support
