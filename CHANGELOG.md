@@ -5,6 +5,81 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2025-11-08
+
+### 🔧 Enhanced Extensibility: Custom Model Configuration Provider
+
+This release introduces the **Protected Method Pattern** for model configuration, allowing consumers to easily override where model configurations come from without breaking existing code.
+
+### Added
+
+#### BaseAIUseCase - New Method
+- **`getModelConfigProvider(key: ModelConfigKey): ValidatedLLMModelConfig`**
+  - Protected method that can be overridden in subclasses to provide custom model configurations
+  - Enables use cases like:
+    - Multi-environment deployments (dev, staging, production)
+    - Dynamic model selection based on runtime conditions
+    - Loading model configs from external sources (database, API, config service)
+    - Testing with different model configurations
+  - Comprehensive JSDoc with usage examples
+
+#### Examples
+- **Custom Config Example** (`src/examples/custom-config/`)
+  - `CustomConfigUseCase`: Demonstrates basic custom config provider pattern
+  - `EnvironmentAwareUseCase`: Shows environment-based model selection (NODE_ENV)
+  - Complete documentation in example README
+
+#### Tests
+- **Model Config Provider Tests** (`tests/unit/usecases/base-ai-usecase.test.ts`)
+  - Default behavior validation
+  - Custom provider override tests
+  - Backward compatibility tests (old pattern still works)
+  - Edge case testing (validation, error handling)
+
+### Changed
+
+#### BaseAIUseCase
+- **`modelConfig` getter**: Now calls `getModelConfigProvider()` internally (backward compatible)
+  - Old pattern (overriding `modelConfig` getter directly) still works
+  - New pattern (overriding `getModelConfigProvider()`) is cleaner and recommended
+
+### Documentation
+- **README.md**: New "Customizing Model Configuration" section in Advanced Features
+- **Example README**: Complete guide for the custom-config example
+- **JSDoc**: Comprehensive documentation with code examples
+
+### Migration Guide
+
+**No breaking changes.** Existing code continues to work without modifications.
+
+**New Pattern (Recommended):**
+```typescript
+export class MyCustomUseCase extends BaseAIUseCase<TPrompt, TRequest, TResult> {
+  // Override to use custom model configuration source
+  protected getModelConfigProvider(key: ModelConfigKey): ValidatedLLMModelConfig {
+    return myCustomGetModelConfig(key);
+  }
+}
+```
+
+**Old Pattern (Still Supported):**
+```typescript
+export class MyUseCase extends BaseAIUseCase<TPrompt, TRequest, TResult> {
+  // Still works, but not recommended
+  protected get modelConfig(): ValidatedLLMModelConfig {
+    return myCustomGetModelConfig(this.modelConfigKey);
+  }
+}
+```
+
+**Benefits of New Pattern:**
+- Cleaner separation of concerns
+- More flexible (can use the key parameter)
+- Easier to test and mock
+- Better for inheritance hierarchies
+
+---
+
 ## [2.2.0] - 2025-11-08
 
 ### 🎯 Breaking Changes: Provider Abstraction in BaseAIUseCase

@@ -6,7 +6,7 @@ Complete testing documentation for all test categories, from unit tests to end-t
 
 | Test Command | Category | Provider Required | Description |
 |-------------|----------|-------------------|-------------|
-| `npm run test:unit` | Unit | ❌ No | Jest unit tests (118 tests) |
+| `npm run test:unit` | Unit | ❌ No | Jest unit tests (124 tests) |
 | `npm run test:unit:watch` | Unit | ❌ No | Jest watch mode for development |
 | `npm run test:unit:coverage` | Unit | ❌ No | Jest with coverage report |
 | `npm run test:basic` | Component | ❌ No | Basic middleware services validation |
@@ -120,11 +120,16 @@ npm run test:all && npm run test:e2e
 - Validation Utils (12 tests)
 - JSON Cleaner Recipe System (5 tests)
 - BaseAIUseCase Provider Selection (4 tests)
+- BaseAIUseCase Model Config Provider Pattern (6 tests) - **New in v2.3.0**
+  - Default behavior validation
+  - Custom provider override tests
+  - Backward compatibility tests
+  - Edge cases (validation, error handling)
 
 **Expected Results**:
 ```
 Test Suites: 14 passed, 14 total
-Tests:       118 passed, 118 total
+Tests:       124 passed, 124 total
 Coverage:    70%+ (lines, functions, branches, statements)
 ```
 

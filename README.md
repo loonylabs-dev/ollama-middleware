@@ -572,6 +572,82 @@ console.log(config.baseUrl);  // Value from MODEL1_URL or default localhost
 </details>
 
 <details>
+<summary><strong>🔧 Customizing Model Configuration (New in v2.3.0)</strong></summary>
+
+Override the model configuration provider to use your own custom model configurations:
+
+**Use Cases:**
+- Multi-environment deployments (dev, staging, production)
+- Dynamic model selection based on runtime conditions
+- Loading model configs from external sources (database, API)
+- Testing with different model configurations
+
+**New Pattern (Recommended):**
+
+```typescript
+import { BaseAIUseCase, ModelConfigKey, ValidatedLLMModelConfig } from '@loonylabs/llm-middleware';
+
+// Define your custom model configurations
+const MY_CUSTOM_MODELS: Record<string, ValidatedLLMModelConfig> = {
+  'PRODUCTION_MODEL': {
+    name: 'llama3.2:latest',
+    baseUrl: 'http://production-server.com:11434',
+    temperature: 0.7
+  },
+  'DEVELOPMENT_MODEL': {
+    name: 'llama3.2:latest',
+    baseUrl: 'http://localhost:11434',
+    temperature: 0.9
+  }
+};
+
+class MyCustomUseCase extends BaseAIUseCase<string, MyRequest, MyResult> {
+  // Override this method to provide custom model configurations
+  protected getModelConfigProvider(key: ModelConfigKey): ValidatedLLMModelConfig {
+    const config = MY_CUSTOM_MODELS[key];
+    if (!config?.name) {
+      throw new Error(`Model ${key} not found`);
+    }
+    return config;
+  }
+
+  // ... rest of your use case implementation
+}
+```
+
+**Environment-Aware Example:**
+
+```typescript
+class EnvironmentAwareUseCase extends BaseAIUseCase<string, MyRequest, MyResult> {
+  protected getModelConfigProvider(key: ModelConfigKey): ValidatedLLMModelConfig {
+    const env = process.env.NODE_ENV || 'development';
+
+    // Automatically select model based on environment
+    const modelKey = env === 'production' ? 'PRODUCTION_MODEL' :
+                     env === 'staging' ? 'STAGING_MODEL' :
+                     'DEVELOPMENT_MODEL';
+
+    return MY_CUSTOM_MODELS[modelKey];
+  }
+}
+```
+
+**Old Pattern (Still Supported):**
+
+```typescript
+// Legacy approach - still works but not recommended
+class LegacyUseCase extends BaseAIUseCase<string, MyRequest, MyResult> {
+  protected get modelConfig(): ValidatedLLMModelConfig {
+    return myCustomGetModelConfig(this.modelConfigKey);
+  }
+}
+```
+
+**See the [Custom Config Example](src/examples/custom-config/README.md) for a complete working implementation.**
+
+</details>
+
+<details>
 <summary><strong>🎛️ Parameter Configuration</strong></summary>
 
 LLM-middleware provides fine-grained control over model parameters to optimize output for different use cases:

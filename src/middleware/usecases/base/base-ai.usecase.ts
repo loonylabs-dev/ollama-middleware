@@ -39,11 +39,30 @@ export abstract class BaseAIUseCase<
   }
 
   /**
+   * Get the model configuration for a given key
+   * Override this method in subclasses to provide custom model configurations
+   *
+   * @param key - The model configuration key
+   * @returns Validated model configuration
+   *
+   * @example
+   * ```typescript
+   * // In your custom use case base class:
+   * protected getModelConfigProvider(key: ModelConfigKey): ValidatedLLMModelConfig {
+   *   return myCustomGetModelConfig(key);
+   * }
+   * ```
+   */
+  protected getModelConfigProvider(key: ModelConfigKey): ValidatedLLMModelConfig {
+    return getModelConfig(key);
+  }
+
+  /**
    * Get the model configuration for this use case
    * Returns validated config with guaranteed model name
    */
   protected get modelConfig(): ValidatedLLMModelConfig {
-    return getModelConfig(this.modelConfigKey);
+    return this.getModelConfigProvider(this.modelConfigKey);
   }
 
   /**
