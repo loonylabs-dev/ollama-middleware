@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2025-11-08
+
+### 🎯 Breaking Changes: Provider Abstraction in BaseAIUseCase
+
+This release makes BaseAIUseCase truly provider-agnostic, allowing use cases to easily switch between different LLM providers (Ollama, Anthropic, OpenAI, Google).
+
+### Changed
+
+#### BaseAIUseCase
+- **BREAKING**: Replaced hard-coded `ollamaService` with provider-agnostic `llmService`
+  - Now uses `llmService.callWithSystemMessage()` with provider parameter
+  - Each use case can override `getProvider()` to specify which LLM provider to use
+  - Default provider: `LLMProvider.OLLAMA` (backward compatible)
+
+#### New Methods
+- **`getProvider(): LLMProvider`**: Override in child classes to select provider
+  - Example: `return LLMProvider.ANTHROPIC` for Anthropic Claude
+  - Example: `return LLMProvider.OLLAMA` for Ollama models
+  - Enables per-use-case provider selection
+
+### Added
+- **Provider Selection**: Use cases can now easily switch providers
+  ```typescript
+  protected getProvider(): LLMProvider {
+    return LLMProvider.ANTHROPIC; // Use Claude instead of Ollama
+  }
+  ```
+
+### Migration Guide
+
+**Before (v2.1.0):**
+```typescript
+export class MyUseCase extends BaseAIUseCase<TRequest, TResult> {
+  // Hard-coded Ollama usage
+}
+```
+
+**After (v2.2.0):**
+```typescript
+export class MyUseCase extends BaseAIUseCase<TPrompt, TRequest, TResult> {
+  // Override to use different provider
+  protected getProvider(): LLMProvider {
+    return LLMProvider.ANTHROPIC; // or OLLAMA, OPENAI, GOOGLE
+  }
+}
+```
+
+**Backward Compatibility**: Existing use cases continue to work without changes (default: OLLAMA)
+
+---
+
 ## [2.1.0] - 2025-11-07
 
 ### 🚀 New Provider: Anthropic Claude Support

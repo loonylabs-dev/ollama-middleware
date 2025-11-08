@@ -1,4 +1,4 @@
-import { ollamaService } from '../../services';
+import { llmService, LLMProvider } from '../../services/llm';
 import { getModelConfig, ModelConfigKey, ValidatedLLMModelConfig } from '../../shared/config/models.config';
 import { ResponseProcessorService } from '../../services/response-processor.service';
 import { BaseAIRequest, BaseAIResult } from '../../shared/types/base-request.types';
@@ -76,6 +76,15 @@ export abstract class BaseAIUseCase<
   }
 
   /**
+   * Get the LLM provider to use for this use case
+   * Override this method in child classes to use different providers (e.g., Anthropic, OpenAI)
+   * @returns The LLM provider to use (default: OLLAMA)
+   */
+  protected getProvider(): LLMProvider {
+    return LLMProvider.OLLAMA; // Default: Ollama for backward compatibility
+  }
+
+  /**
    * Execute the AI use case
    * @param request The request parameters
    * @returns The result of the AI processing
@@ -121,8 +130,11 @@ export abstract class BaseAIUseCase<
     );
 
     try {
-      
-      const result = await ollamaService.callOllamaApiWithSystemMessage(
+      // Get the provider for this use case
+      const provider = this.getProvider();
+
+      // Call the LLM service with the configured provider
+      const result = await llmService.callWithSystemMessage(
         formattedUserMessage,
         this.systemMessage,
         {
@@ -130,6 +142,7 @@ export abstract class BaseAIUseCase<
           temperature: validatedParams.temperature,
           authToken: this.modelConfig.bearerToken,
           baseUrl: this.modelConfig.baseUrl,
+          provider: provider,
           ...ModelParameterManagerService.toOllamaOptions(validatedParams),
           debugContext: this.constructor.name
         }
