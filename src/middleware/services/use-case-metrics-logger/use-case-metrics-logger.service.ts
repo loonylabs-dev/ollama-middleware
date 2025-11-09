@@ -122,6 +122,7 @@ export class UseCaseMetricsLoggerService {
    * @param success Whether execution was successful
    * @param errorMessage Optional error message
    * @param additionalParams Additional parameters
+   * @param actualTokens Optional actual token counts from provider (preferred over estimation)
    * @returns Calculated metrics
    */
   public static calculateMetrics(
@@ -133,25 +134,39 @@ export class UseCaseMetricsLoggerService {
     modelName: string,
     success: boolean,
     errorMessage?: string,
-    additionalParams: { 
-      repeatPenalty?: number; 
-      topP?: number; 
+    additionalParams: {
+      repeatPenalty?: number;
+      topP?: number;
       topK?: number;
       frequencyPenalty?: number;
       presencePenalty?: number;
       repeatLastN?: number;
       numPredict?: number;
-    } = {}
+    } = {},
+    actualTokens?: {
+      inputTokens?: number;
+      outputTokens?: number;
+    }
   ): UseCaseMetrics {
     const executionTimeSeconds = (Date.now() - startTime) / 1000;
-    
-    // Estimate token counts using llm-middleware's TokenEstimatorService
-    const inputEstimate = TokenEstimatorService.estimateInputTokens(systemMessage, userPrompt);
-    const outputEstimate = TokenEstimatorService.estimateTokenCount(response);
-    
-    const inputTokenCount = inputEstimate.estimated;
-    const outputTokenCount = outputEstimate.estimated;
-    
+
+    // Use actual token counts from provider if available, otherwise estimate
+    let inputTokenCount: number;
+    let outputTokenCount: number;
+
+    if (actualTokens?.inputTokens !== undefined && actualTokens?.outputTokens !== undefined) {
+      // Use actual token counts from provider (accurate)
+      inputTokenCount = actualTokens.inputTokens;
+      outputTokenCount = actualTokens.outputTokens;
+    } else {
+      // Fallback: Estimate token counts using TokenEstimatorService
+      const inputEstimate = TokenEstimatorService.estimateInputTokens(systemMessage, userPrompt);
+      const outputEstimate = TokenEstimatorService.estimateTokenCount(response);
+
+      inputTokenCount = inputEstimate.estimated;
+      outputTokenCount = outputEstimate.estimated;
+    }
+
     const tokensPerSecond = TokenEstimatorService.calculateTokensPerSecond(
       outputTokenCount,
       executionTimeSeconds

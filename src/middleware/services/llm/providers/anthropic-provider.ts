@@ -2,7 +2,7 @@ import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../../../shared/utils/logging.utils';
 import { BaseLLMProvider } from './base-llm-provider';
-import { LLMProvider, CommonLLMResponse } from '../types';
+import { LLMProvider, CommonLLMResponse, TokenUsage } from '../types';
 import {
   AnthropicRequestOptions,
   AnthropicAPIRequest,
@@ -185,6 +185,20 @@ export class AnthropicProvider extends BaseLLMProvider {
           .map(block => block.text)
           .join('\n');
 
+        // Normalize token usage to provider-agnostic format
+        const tokenUsage: TokenUsage = {
+          inputTokens: apiResponse.usage.input_tokens,
+          outputTokens: apiResponse.usage.output_tokens,
+          totalTokens: apiResponse.usage.input_tokens + apiResponse.usage.output_tokens,
+          // Include Anthropic-specific cache metadata if present
+          ...(apiResponse.usage.cache_creation_input_tokens || apiResponse.usage.cache_read_input_tokens ? {
+            cacheMetadata: {
+              cacheCreationTokens: apiResponse.usage.cache_creation_input_tokens,
+              cacheReadTokens: apiResponse.usage.cache_read_input_tokens
+            }
+          } : {})
+        };
+
         // Normalize to CommonLLMResponse format
         const normalizedResponse: AnthropicResponse = {
           message: {
@@ -194,10 +208,12 @@ export class AnthropicProvider extends BaseLLMProvider {
           metadata: {
             provider: this.providerName,
             model: apiResponse.model,
-            tokensUsed: apiResponse.usage.input_tokens + apiResponse.usage.output_tokens,
+            tokensUsed: tokenUsage.totalTokens,
             processingTime: requestDuration
           },
-          // Anthropic-specific fields
+          // Standardized token usage
+          usage: tokenUsage,
+          // Anthropic-specific fields (kept for backward compatibility)
           id: apiResponse.id,
           stop_reason: apiResponse.stop_reason || undefined,
           input_tokens: apiResponse.usage.input_tokens,

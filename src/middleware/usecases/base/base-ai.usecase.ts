@@ -174,9 +174,20 @@ export abstract class BaseAIUseCase<
       // Process the response using the ResponseProcessorService (async for Recipe System)
       const { cleanedJson: processedContent, thinking: extractedThinking } =
         await ResponseProcessorService.processResponseAsync(result.message.content);
-      
+
       thinking = extractedThinking;
       success = true;
+
+      // Extract actual token counts from provider response if available
+      let actualTokens: { inputTokens?: number; outputTokens?: number } | undefined;
+
+      if (result.usage) {
+        // Use standardized usage field (provider-agnostic)
+        actualTokens = {
+          inputTokens: result.usage.inputTokens,
+          outputTokens: result.usage.outputTokens
+        };
+      }
 
       // Calculate and log metrics
       const metrics = UseCaseMetricsLoggerService.calculateMetrics(
@@ -188,7 +199,8 @@ export abstract class BaseAIUseCase<
         this.modelConfig.name,
         success,
         errorMessage,
-        definedParams
+        definedParams,
+        actualTokens  // Pass actual tokens from provider
       );
 
       // Log completion with metrics

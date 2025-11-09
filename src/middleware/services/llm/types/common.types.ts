@@ -41,6 +41,26 @@ export interface CommonLLMOptions {
 }
 
 /**
+ * Provider-agnostic token usage information
+ * Normalized across all LLM providers (Anthropic, Ollama, OpenAI, Google)
+ */
+export interface TokenUsage {
+  /** Number of tokens in the input/prompt */
+  inputTokens: number;
+  /** Number of tokens in the output/completion */
+  outputTokens: number;
+  /** Total tokens (inputTokens + outputTokens) */
+  totalTokens: number;
+  /** Cache-related token counts (optional, provider-specific) */
+  cacheMetadata?: {
+    /** Tokens used to create cache */
+    cacheCreationTokens?: number;
+    /** Tokens read from cache */
+    cacheReadTokens?: number;
+  };
+}
+
+/**
  * Common response format across all providers
  */
 export interface CommonLLMResponse {
@@ -54,6 +74,12 @@ export interface CommonLLMResponse {
     tokensUsed?: number;
     processingTime?: number;
   };
+  /**
+   * Standardized token usage information
+   * Available when the provider returns actual token counts
+   * If not available, tokens will be estimated in metrics calculation
+   */
+  usage?: TokenUsage;
 }
 
 /**

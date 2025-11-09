@@ -61,10 +61,15 @@ export interface AnthropicContentBlock {
 
 /**
  * Anthropic usage information
+ * Based on: https://docs.anthropic.com/en/api/messages
  */
 export interface AnthropicUsage {
   input_tokens: number;
   output_tokens: number;
+  /** Tokens used to create ephemeral cache (if prompt caching enabled) */
+  cache_creation_input_tokens?: number;
+  /** Tokens read from cache (if prompt caching enabled) */
+  cache_read_input_tokens?: number;
 }
 
 /**

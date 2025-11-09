@@ -2,7 +2,7 @@ import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../../../shared/utils/logging.utils';
 import { BaseLLMProvider } from './base-llm-provider';
-import { LLMProvider, CommonLLMResponse } from '../types';
+import { LLMProvider, CommonLLMResponse, TokenUsage } from '../types';
 import { OllamaRequestOptions, OllamaResponse } from '../types/ollama.types';
 import { LLMDebugger, LLMDebugInfo } from '../utils/debug-llm.utils';
 import { DataFlowLoggerService } from '../../data-flow-logger';
@@ -182,6 +182,17 @@ export class OllamaProvider extends BaseLLMProvider {
       if (response && response.status === 200) {
         const aiResponse: OllamaResponse = response.data;
 
+        // Normalize token usage to provider-agnostic format
+        // Ollama provides prompt_eval_count (input) and eval_count (output)
+        const inputTokens = aiResponse.prompt_eval_count || 0;
+        const outputTokens = aiResponse.eval_count || 0;
+
+        const tokenUsage: TokenUsage = {
+          inputTokens: inputTokens,
+          outputTokens: outputTokens,
+          totalTokens: inputTokens + outputTokens
+        };
+
         // Add session ID to response
         aiResponse.sessionId = sessionId;
 
@@ -189,9 +200,12 @@ export class OllamaProvider extends BaseLLMProvider {
         aiResponse.metadata = {
           provider: this.providerName,
           model: model,
-          tokensUsed: aiResponse.eval_count,
+          tokensUsed: tokenUsage.totalTokens,
           processingTime: requestDuration
         };
+
+        // Add standardized token usage
+        aiResponse.usage = tokenUsage;
 
         // Add response info
         debugInfo.responseTimestamp = new Date();
