@@ -380,7 +380,7 @@ console.log(result.withinLimit);    // true if ≤ 280 chars
 ```
 
 **Key Features:**
-- 🎯 **Token Limiting**: Uses `num_predict: 70` to limit output to ~280 characters
+- 🎯 **Token Limiting**: Uses `maxTokens: 70` to limit output to ~280 characters (provider-agnostic!)
 - 📊 **Character Validation**: Automatically checks if output is within Twitter's limit
 - 🎨 **Marketing Preset**: Optimized parameters for engaging, concise content
 - ✅ **Testable**: Integration test verifies parameter effectiveness
@@ -389,7 +389,10 @@ console.log(result.withinLimit);    // true if ≤ 280 chars
 ```typescript
 protected getParameterOverrides(): ModelParameterOverrides {
   return {
-    num_predict: 70,        // Limit to ~280 characters
+    // ✅ NEW in v2.7.0: Provider-agnostic maxTokens (recommended)
+    maxTokens: 70,          // Works for Anthropic, OpenAI, Ollama, Google
+
+    // Parameter tuning
     temperatureOverride: 0.7,
     repeatPenalty: 1.3,
     frequencyPenalty: 0.3,
@@ -397,6 +400,14 @@ protected getParameterOverrides(): ModelParameterOverrides {
     topP: 0.9,
     topK: 50,
     repeatLastN: 32
+  };
+}
+
+// 💡 Legacy Ollama-specific approach (still works):
+protected getParameterOverrides(): ModelParameterOverrides {
+  return {
+    num_predict: 70,        // Ollama-specific (deprecated)
+    // ... other params
   };
 }
 ```

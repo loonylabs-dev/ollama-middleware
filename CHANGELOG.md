@@ -5,6 +5,88 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2025-11-09
+
+### ✨ Feature: Provider-Agnostic `maxTokens` Parameter
+
+This release adds provider-agnostic `maxTokens` support to `ModelParameterOverrides`, following the same design pattern used in `CommonLLMOptions`. Use cases can now set maximum output tokens regardless of the underlying LLM provider.
+
+#### Problem
+Previously, `ModelParameterOverrides` only supported Ollama-specific parameters (`num_predict`, `num_ctx`, `num_batch`), making it impossible to set token limits for Anthropic/OpenAI providers via `getParameterOverrides()`.
+
+**Example Issue:**
+```typescript
+// ❌ Before v2.7.0: Only worked for Ollama
+protected getParameterOverrides(): ModelParameterOverrides {
+  return {
+    num_predict: 16384  // Anthropic ignored this!
+  };
+}
+```
+
+### Added
+
+#### Provider-Agnostic `maxTokens` in ModelParameterOverrides
+- **New field**: `maxTokens?: number` - works across all providers
+- **Provider mapping:**
+  - Anthropic: `maxTokens` → `max_tokens`
+  - OpenAI: `maxTokens` → `max_tokens`
+  - Ollama: `maxTokens` → `num_predict`
+  - Google: `maxTokens` → `maxOutputTokens`
+
+#### Enhanced ModelParameterManagerService
+- `getEffectiveParameters()` now maps `maxTokens` → `numPredict`
+- **Fallback logic**: `num_predict` takes precedence over `maxTokens` for Ollama power users
+- Comprehensive JSDoc documentation for provider mapping
+
+#### Updated BaseAIUseCase
+- Passes `maxTokens` to `llmService.callWithSystemMessage()`
+- Automatically works with all providers (Anthropic, OpenAI, Ollama, Google)
+- Maps from `validatedParams.numPredict` (which includes `maxTokens`)
+
+### Changed
+
+#### Deprecated `num_predict` in ModelParameterOverrides
+- **Still works** for backward compatibility
+- **Recommended**: Use `maxTokens` for cross-provider code
+- Only use `num_predict` for Ollama-specific fine-tuning
+
+### Usage Example
+
+```typescript
+// ✅ After v2.7.0: Works for all providers!
+protected getParameterOverrides(): ModelParameterOverrides {
+  return {
+    maxTokens: 16384  // Anthropic, OpenAI, Ollama, Google
+  };
+}
+```
+
+### Benefits
+- ✅ **Provider-agnostic design** - consistent with `CommonLLMOptions`
+- ✅ **Simplified use case code** - single parameter works everywhere
+- ✅ **Backward compatible** - existing `num_predict` usage still works
+- ✅ **Advanced control** - Ollama users can still use `num_predict` for fine-tuning
+
+### Migration Guide
+
+**No breaking changes** - existing code continues to work.
+
+**Recommended updates:**
+```typescript
+// Old (still works)
+protected getParameterOverrides(): ModelParameterOverrides {
+  return { num_predict: 8192 };
+}
+
+// New (recommended - provider-agnostic)
+protected getParameterOverrides(): ModelParameterOverrides {
+  return { maxTokens: 8192 };
+}
+```
+
+---
+
 ## [2.6.0] - 2025-11-09
 
 ### ✨ Feature: Provider-Agnostic Token Usage Tracking
