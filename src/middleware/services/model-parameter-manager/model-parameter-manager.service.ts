@@ -74,10 +74,30 @@ export interface ModelParameters {
 /**
  * Interface for parameter overrides that can be applied to default model parameters.
  * All parameters are optional - only specify what you want to override.
+ *
+ * **Provider-Agnostic Design:**
+ * - Use `maxTokens` for cross-provider compatibility (recommended)
+ * - Provider-specific parameters (num_predict, num_ctx) available for advanced Ollama tuning
  */
 export interface ModelParameterOverrides {
   /** Override the base temperature setting */
   temperatureOverride?: number;
+
+  // ===== Provider-Agnostic Parameters (Recommended) =====
+
+  /**
+   * Maximum number of tokens to generate in the response.
+   * **Provider-agnostic** - works across all providers:
+   * - Anthropic: Maps to max_tokens
+   * - OpenAI: Maps to max_tokens
+   * - Ollama: Maps to num_predict
+   * - Google: Maps to maxOutputTokens
+   *
+   * Range: 1+ (provider-specific limits apply)
+   * Default: Provider-specific (typically 4096 for Anthropic, 128-2048 for Ollama)
+   */
+  maxTokens?: number;
+
   /** Repeat penalty override */
   repeatPenalty?: number;
   /** Nucleus sampling (top-p) override */
@@ -90,11 +110,25 @@ export interface ModelParameterOverrides {
   presencePenalty?: number;
   /** Repeat last N tokens override */
   repeatLastN?: number;
-  /** Maximum tokens to generate (Ollama: num_predict) */
+
+  // ===== Ollama-Specific Parameters (Advanced Control) =====
+
+  /**
+   * @deprecated Prefer `maxTokens` for provider-agnostic code.
+   * Maximum tokens to generate (Ollama-specific: num_predict).
+   * Only use this if you need Ollama-specific behavior different from maxTokens.
+   * If both maxTokens and num_predict are set, num_predict takes precedence for Ollama.
+   */
   num_predict?: number;
-  /** Context window size (Ollama: num_ctx) */
+  /**
+   * Context window size (Ollama-specific: num_ctx).
+   * No provider-agnostic equivalent - use only for Ollama fine-tuning.
+   */
   num_ctx?: number;
-  /** Batch size for parallel processing (Ollama: num_batch) */
+  /**
+   * Batch size for parallel processing (Ollama-specific: num_batch).
+   * No provider-agnostic equivalent - use only for Ollama performance tuning.
+   */
   num_batch?: number;
 }
 
@@ -124,6 +158,11 @@ export class ModelParameterManagerService {
     modelConfig: ModelConfig,
     overrides: ModelParameterOverrides = {}
   ): ModelParameters {
+    // For Ollama compatibility: num_predict takes precedence over maxTokens
+    // This allows advanced users to have fine-grained Ollama control while
+    // still supporting the provider-agnostic maxTokens parameter
+    const effectiveNumPredict = overrides.num_predict ?? overrides.maxTokens;
+
     return {
       temperature: overrides.temperatureOverride ?? modelConfig.temperature ?? this.DEFAULT_TEMPERATURE,
       repeatPenalty: overrides.repeatPenalty,
@@ -132,7 +171,7 @@ export class ModelParameterManagerService {
       frequencyPenalty: overrides.frequencyPenalty,
       presencePenalty: overrides.presencePenalty,
       repeatLastN: overrides.repeatLastN,
-      numPredict: overrides.num_predict,
+      numPredict: effectiveNumPredict,
       numCtx: overrides.num_ctx,
       numBatch: overrides.num_batch
     };
@@ -189,6 +228,7 @@ export class ModelParameterManagerService {
     }
 
     // numPredict should be a positive integer (max tokens to generate)
+    // Note: This applies to both provider-agnostic maxTokens and Ollama-specific num_predict
     if (validated.numPredict !== undefined) {
       if (validated.numPredict < 1) validated.numPredict = 1;
       validated.numPredict = Math.round(validated.numPredict);

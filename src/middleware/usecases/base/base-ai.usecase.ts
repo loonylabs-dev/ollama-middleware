@@ -162,6 +162,10 @@ export abstract class BaseAIUseCase<
           authToken: this.modelConfig.bearerToken,
           baseUrl: this.modelConfig.baseUrl,
           provider: provider,
+          // Provider-agnostic maxTokens (works for Anthropic, OpenAI, Google, Ollama)
+          // Maps from overrides.maxTokens or overrides.num_predict via getEffectiveParameters
+          maxTokens: validatedParams.numPredict,
+          // Ollama-specific options (includes num_predict, num_ctx, num_batch, etc.)
           ...ModelParameterManagerService.toOllamaOptions(validatedParams),
           debugContext: this.constructor.name
         }
