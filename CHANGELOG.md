@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.1] - 2025-11-10
+
+### Fixed
+
+**Critical Bug Fix:** `getResponseProcessingOptions()` was never called
+
+#### Problem
+
+In v2.8.0, the `BaseAIUseCase.execute()` method called `ResponseProcessorService.processResponseAsync()` **directly**, bypassing the `processResponse()` method entirely. This meant:
+
+- ❌ `getResponseProcessingOptions()` was **never called**
+- ❌ Use cases could not customize response processing
+- ❌ Plain text responses (compression, summarization) were still truncated by JSON cleaner
+
+```typescript
+// ❌ v2.8.0 - Direct call (wrong!)
+const { cleanedJson, thinking } =
+  await ResponseProcessorService.processResponseAsync(result.message.content);
+```
+
+#### Solution
+
+Changed `execute()` to call `this.processResponse()` instead, which properly uses `getResponseProcessingOptions()`:
+
+```typescript
+// ✅ v2.8.1 - Uses processResponse() (correct!)
+const { cleanedJson, thinking } =
+  await this.processResponse(result.message.content);
+```
+
+Now use cases can properly customize processing by overriding `getResponseProcessingOptions()`.
+
+### Impact
+
+This fix enables the v2.8.0 feature to actually work as intended. Users who upgraded to v2.8.0 and tried to use `getResponseProcessingOptions()` should upgrade to v2.8.1 immediately.
+
+---
+
 ## [2.8.0] - 2025-11-10
 
 ### ✨ Feature: Configurable Response Processing Options

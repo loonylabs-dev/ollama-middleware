@@ -176,9 +176,9 @@ export abstract class BaseAIUseCase<
         throw new Error('No response received from the LLM provider');
       }
 
-      // Process the response using the ResponseProcessorService (async for Recipe System)
+      // Process the response using processResponse() method (uses getResponseProcessingOptions())
       const { cleanedJson: processedContent, thinking: extractedThinking } =
-        await ResponseProcessorService.processResponseAsync(result.message.content);
+        await this.processResponse(result.message.content);
 
       thinking = extractedThinking;
       success = true;
