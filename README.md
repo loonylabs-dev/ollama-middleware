@@ -714,6 +714,104 @@ For detailed documentation about all parameters, value ranges, and preset config
 
 </details>
 
+---
+
+### 🔧 Response Processing Options (v2.8.0)
+
+<details>
+<summary><strong>📦 Configurable Response Processing</strong></summary>
+
+Starting in v2.8.0, you can customize how responses are processed with `ResponseProcessingOptions`:
+
+#### Available Options
+
+```typescript
+interface ResponseProcessingOptions {
+  extractThinkTags?: boolean;    // default: true
+  extractMarkdown?: boolean;     // default: true
+  validateJson?: boolean;        // default: true
+  cleanJson?: boolean;           // default: true
+  recipeMode?: 'conservative' | 'aggressive' | 'adaptive';
+}
+```
+
+#### Usage in Use Cases
+
+Override `getResponseProcessingOptions()` to customize processing:
+
+```typescript
+// Plain text response (compression, summarization)
+class CompressEntityUseCase extends BaseAIUseCase {
+  protected getResponseProcessingOptions(): ResponseProcessingOptions {
+    return {
+      extractThinkTags: true,     // YES: Extract <think> tags
+      extractMarkdown: true,      // YES: Extract markdown blocks
+      validateJson: false,        // NO: Skip JSON validation
+      cleanJson: false           // NO: Skip JSON cleaning
+    };
+  }
+}
+
+// Keep think tags in content
+class DebugUseCase extends BaseAIUseCase {
+  protected getResponseProcessingOptions(): ResponseProcessingOptions {
+    return {
+      extractThinkTags: false  // Keep <think> tags visible
+    };
+  }
+}
+
+// Conservative JSON cleaning
+class StrictJsonUseCase extends BaseAIUseCase {
+  protected getResponseProcessingOptions(): ResponseProcessingOptions {
+    return {
+      recipeMode: 'conservative'  // Minimal JSON fixes
+    };
+  }
+}
+```
+
+#### Direct Service Usage
+
+You can also use `ResponseProcessorService` directly:
+
+```typescript
+import { ResponseProcessorService, ResponseProcessingOptions } from '@loonylabs/llm-middleware';
+
+// Plain text (no JSON processing)
+const result = await ResponseProcessorService.processResponseAsync(response, {
+  validateJson: false,
+  cleanJson: false
+});
+
+// Extract markdown but skip JSON
+const result2 = await ResponseProcessorService.processResponseAsync(response, {
+  extractMarkdown: true,
+  validateJson: false
+});
+```
+
+#### Use Cases
+
+- ✅ **Plain text responses**: Compression, summarization, text generation
+- ✅ **Pre-validated JSON**: Skip redundant validation
+- ✅ **Debug/analysis**: Keep think tags in content
+- ✅ **Performance**: Skip unnecessary processing steps
+- ✅ **Custom workflows**: Mix and match extraction features
+
+#### Backward Compatibility
+
+All options are **optional** with sensible defaults. Existing code works without changes:
+
+```typescript
+// Still works exactly as before
+const result = await ResponseProcessorService.processResponseAsync(response);
+```
+
+</details>
+
+---
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.

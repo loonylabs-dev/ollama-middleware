@@ -1,4 +1,5 @@
 import { JsonCleanerService, CleanedJsonResult } from './json-cleaner';
+import { ResponseProcessingOptions, DEFAULT_RESPONSE_PROCESSING_OPTIONS } from './response-processor/types';
 
 /**
  * Service for processing AI model responses
@@ -7,14 +8,93 @@ import { JsonCleanerService, CleanedJsonResult } from './json-cleaner';
 export class ResponseProcessorService {
 
   /**
-   * Process the raw AI response by cleaning JSON and extracting thinking content
-   * Uses the modern Recipe System for better results
+   * Process the raw AI response with configurable options
+   *
    * @param response The raw response from the AI model
+   * @param options Processing options to control extraction and validation behavior
    * @returns Processed content with thinking extracted
+   *
+   * @example
+   * ```typescript
+   * // Default behavior (backward compatible)
+   * const result = await processResponseAsync(response);
+   *
+   * // Plain text response (skip JSON cleaning)
+   * const result = await processResponseAsync(response, {
+   *   extractThinkTags: true,
+   *   extractMarkdown: true,
+   *   validateJson: false,
+   *   cleanJson: false
+   * });
+   *
+   * // Custom processing
+   * const result = await processResponseAsync(response, {
+   *   extractThinkTags: false, // Keep <think> in content
+   *   cleanJson: true,         // Clean JSON
+   *   recipeMode: 'conservative'
+   * });
+   * ```
+   *
+   * @since 2.8.0
    */
-  public static async processResponseAsync(response: string): Promise<CleanedJsonResult> {
-    // Delegate to JsonCleanerService's modern async method
-    return JsonCleanerService.processResponseAsync(response);
+  public static async processResponseAsync(
+    response: string,
+    options: ResponseProcessingOptions = {}
+  ): Promise<CleanedJsonResult> {
+    // Merge with defaults for backward compatibility
+    const opts: Required<ResponseProcessingOptions> = {
+      ...DEFAULT_RESPONSE_PROCESSING_OPTIONS,
+      ...options
+    };
+
+    let thinking = '';
+    let content = response;
+
+    // Step 1: Extract thinking tags if enabled
+    if (opts.extractThinkTags) {
+      thinking = this.extractThinking(content);
+      content = this.extractContent(content);
+    }
+
+    // Step 2: Extract markdown if enabled
+    if (opts.extractMarkdown) {
+      content = this.extractMarkdownContent(content);
+    }
+
+    // Step 3: Clean/validate JSON if enabled
+    if (opts.validateJson || opts.cleanJson) {
+      // Only call JsonCleaner if content is not empty
+      if (content && content.trim().length > 0) {
+        const cleaned = await JsonCleanerService.processResponseAsync(content);
+        content = cleaned.cleanedJson;
+        // Preserve thinking from JsonCleaner if we didn't extract it ourselves
+        if (!opts.extractThinkTags && cleaned.thinking) {
+          thinking = cleaned.thinking;
+        }
+      }
+    }
+
+    return {
+      cleanedJson: content,
+      thinking
+    };
+  }
+
+  /**
+   * Extract content from markdown code blocks
+   * Handles ```json, ```text, ``` blocks
+   *
+   * @param response The response potentially containing markdown
+   * @returns Content without markdown wrappers
+   * @private
+   */
+  private static extractMarkdownContent(response: string): string {
+    // Check for markdown code blocks
+    const markdownMatch = response.match(/```(?:json|text|)?\s*([\s\S]*?)\s*```/);
+    if (markdownMatch && markdownMatch[1]) {
+      return markdownMatch[1].trim();
+    }
+    return response;
   }
 
   /**

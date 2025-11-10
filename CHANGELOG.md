@@ -5,6 +5,145 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] - 2025-11-10
+
+### ✨ Feature: Configurable Response Processing Options
+
+This release adds flexible configuration options for response processing, allowing use cases to selectively enable/disable JSON cleaning, markdown extraction, and think tag extraction.
+
+#### Problem
+
+Previously, `ResponseProcessorService.processResponseAsync()` always applied the full processing pipeline (think tag extraction → markdown extraction → JSON cleaning/validation) regardless of the use case requirements.
+
+This caused issues for:
+- **Plain text responses** (compression, summarization): JSON cleaner truncated multi-paragraph text
+- **Pre-validated JSON**: Unnecessary cleaning overhead
+- **Custom processing needs**: No way to keep `<think>` tags in content
+
+**Example Issue:**
+```typescript
+// ❌ Before v2.8.0: Plain text was truncated by JSON cleaner
+const response = `Paragraph 1\n\nParagraph 2\n\nParagraph 3`;
+const result = await ResponseProcessorService.processResponseAsync(response);
+// Result: Only "Paragraph 1" (truncated by JSON validation failure)
+```
+
+### Added
+
+#### `ResponseProcessingOptions` Interface
+
+New configurable options for granular control over response processing:
+
+```typescript
+interface ResponseProcessingOptions {
+  extractThinkTags?: boolean;    // default: true
+  extractMarkdown?: boolean;     // default: true
+  validateJson?: boolean;        // default: true
+  cleanJson?: boolean;           // default: true
+  recipeMode?: 'conservative' | 'aggressive' | 'adaptive';  // default: 'adaptive'
+}
+```
+
+#### Updated `ResponseProcessorService`
+
+- `processResponseAsync()` now accepts optional `options` parameter
+- Conditional processing based on options
+- **100% backward compatible** - existing calls work unchanged
+
+```typescript
+// Plain text responses (compression use case)
+const result = await ResponseProcessorService.processResponseAsync(response, {
+  extractThinkTags: true,
+  extractMarkdown: true,
+  validateJson: false,  // Skip JSON validation
+  cleanJson: false     // Skip JSON cleaning
+});
+
+// Custom processing
+const result = await ResponseProcessorService.processResponseAsync(response, {
+  extractThinkTags: false,  // Keep <think> in content
+  recipeMode: 'conservative'
+});
+```
+
+#### Enhanced `BaseAIUseCase`
+
+New protected method for use cases to customize processing:
+
+```typescript
+protected getResponseProcessingOptions(): ResponseProcessingOptions {
+  return {};  // Default: full processing (backward compatible)
+}
+```
+
+Use cases override this to customize behavior:
+
+```typescript
+// In CompressEntityUseCase
+protected getResponseProcessingOptions(): ResponseProcessingOptions {
+  return {
+    extractThinkTags: true,     // YES: Extract <think> tags
+    extractMarkdown: true,      // YES: Extract markdown blocks
+    validateJson: false,        // NO: Skip JSON validation
+    cleanJson: false           // NO: Skip JSON cleaning
+  };
+}
+```
+
+### Changed
+
+#### `processResponse()` in BaseAIUseCase
+
+- Now calls `getResponseProcessingOptions()` to get options
+- Passes options to `ResponseProcessorService.processResponseAsync()`
+- **Backward compatible** - default options maintain existing behavior
+
+### Benefits
+
+- ✅ **Granular control** - Enable/disable features independently
+- ✅ **Plain text support** - No more truncation by JSON cleaner
+- ✅ **Performance** - Skip unnecessary processing
+- ✅ **Flexibility** - Keep think tags when needed
+- ✅ **100% backward compatible** - No breaking changes
+
+### Migration Guide
+
+**No breaking changes** - existing code continues to work without modifications.
+
+**For plain text use cases (compression, summarization):**
+
+```typescript
+// Override in your use case
+protected getResponseProcessingOptions(): ResponseProcessingOptions {
+  return {
+    validateJson: false,
+    cleanJson: false
+  };
+}
+```
+
+**For custom think tag handling:**
+
+```typescript
+protected getResponseProcessingOptions(): ResponseProcessingOptions {
+  return {
+    extractThinkTags: false  // Keep <think> tags in content
+  };
+}
+```
+
+### Testing
+
+- 15 comprehensive tests covering all option combinations
+- Plain text response handling
+- Markdown extraction (with/without)
+- Think tag extraction (with/without)
+- Combined extraction scenarios
+- Edge cases (empty response, whitespace, nested blocks)
+- Backward compatibility verification
+
+---
+
 ## [2.7.0] - 2025-11-09
 
 ### ✨ Feature: Provider-Agnostic `maxTokens` Parameter

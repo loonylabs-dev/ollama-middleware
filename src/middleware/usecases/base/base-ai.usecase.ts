@@ -1,6 +1,7 @@
 import { llmService, LLMProvider } from '../../services/llm';
 import { getModelConfig, ModelConfigKey, ValidatedLLMModelConfig } from '../../shared/config/models.config';
 import { ResponseProcessorService } from '../../services/response-processor.service';
+import { ResponseProcessingOptions } from '../../services/response-processor/types';
 import { BaseAIRequest, BaseAIResult } from '../../shared/types/base-request.types';
 import { logger } from '../../shared/utils/logging.utils';
 import { ModelParameterManagerService, ModelParameterOverrides } from '../../services/model-parameter-manager/model-parameter-manager.service';
@@ -236,11 +237,47 @@ export abstract class BaseAIUseCase<
   }
 
   /**
+   * Get response processing options for this use case
+   * Override in specific use cases to customize processing behavior
+   *
+   * @returns Options for response processing
+   *
+   * @example
+   * ```typescript
+   * // For plain text responses (compression, summarization)
+   * protected getResponseProcessingOptions(): ResponseProcessingOptions {
+   *   return {
+   *     extractThinkTags: true,     // YES: Extract <think> tags
+   *     extractMarkdown: true,      // YES: Extract markdown blocks
+   *     validateJson: false,        // NO: Skip JSON validation
+   *     cleanJson: false           // NO: Skip JSON cleaning
+   *   };
+   * }
+   *
+   * // For conservative JSON cleaning
+   * protected getResponseProcessingOptions(): ResponseProcessingOptions {
+   *   return {
+   *     recipeMode: 'conservative'
+   *   };
+   * }
+   * ```
+   *
+   * @since 2.8.0
+   */
+  protected getResponseProcessingOptions(): ResponseProcessingOptions {
+    // Default: Use all features (backward compatible)
+    return {};
+  }
+
+  /**
    * Process the raw AI response using the modern Recipe System
    * Can be overridden by specific use cases if special processing is needed
+   *
+   * @since 2.8.0 - Now uses getResponseProcessingOptions() for configurable processing
    */
   protected async processResponse(response: string): Promise<{ cleanedJson: string; thinking: string }> {
-    return ResponseProcessorService.processResponseAsync(response);
+    const options = this.getResponseProcessingOptions();
+    return ResponseProcessorService.processResponseAsync(response, options);
   }
 
   /**
