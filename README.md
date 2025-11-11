@@ -2,7 +2,7 @@
 
 # 🚀 LLM Middleware
 
-*A comprehensive TypeScript middleware library for building robust multi-provider LLM backends. Currently supports Ollama and Anthropic Claude, with OpenAI and Google planned. Features advanced JSON cleaning, logging, error handling, and more.*
+*A comprehensive TypeScript middleware library for building robust multi-provider LLM backends. Currently supports Ollama, Anthropic Claude, and Google Gemini, with OpenAI planned. Features advanced JSON cleaning, logging, error handling, and more.*
 
 <!-- Horizontal Badge Navigation Bar -->
 [![npm version](https://img.shields.io/npm/v/@loonylabs/llm-middleware.svg?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/@loonylabs/llm-middleware)
@@ -41,7 +41,8 @@
 - 🤖 **Multi-Provider Architecture**: Extensible provider system with strategy pattern
   - ✅ **Ollama**: Fully supported with comprehensive parameter control
   - ✅ **Anthropic Claude**: Complete support for Claude models (Opus, Sonnet, Haiku)
-  - 🔜 **OpenAI, Google**: Planned for future releases
+  - ✅ **Google Gemini**: Complete support for Gemini models (Pro, Flash)
+  - 🔜 **OpenAI**: Planned for future releases
   - 🔌 **Pluggable**: Easy to add custom providers - see [LLM Providers Guide](docs/LLM_PROVIDERS.md)
 - 🧹 **JSON Cleaning**: Recipe-based JSON repair system with automatic strategy selection
   - ✨ **v2.4.0**: Enhanced array extraction support - properly handles JSON arrays `[...]` in addition to objects `{...}`
@@ -125,7 +126,7 @@ class MyAnthropicChatUseCase extends MyChatUseCase {
 <summary><strong>🔌 Using the Multi-Provider Architecture</strong></summary>
 
 ```typescript
-import { llmService, LLMProvider, ollamaProvider, anthropicProvider } from '@loonylabs/llm-middleware';
+import { llmService, LLMProvider, ollamaProvider, anthropicProvider, geminiProvider } from '@loonylabs/llm-middleware';
 
 // Option 1: Use the LLM Service orchestrator (recommended for flexibility)
 const response1 = await llmService.call(
@@ -149,8 +150,20 @@ const response2 = await llmService.call(
   }
 );
 
+// Use Google Gemini
+const response3 = await llmService.call(
+  "What is machine learning?",
+  {
+    provider: LLMProvider.GOOGLE,
+    model: "gemini-1.5-pro",
+    authToken: process.env.GEMINI_API_KEY,
+    maxTokens: 1024,
+    temperature: 0.7
+  }
+);
+
 // Option 2: Use provider directly for provider-specific features
-const response3 = await ollamaProvider.callWithSystemMessage(
+const response4 = await ollamaProvider.callWithSystemMessage(
   "Write a haiku about coding",
   "You are a creative poet",
   {
@@ -163,7 +176,7 @@ const response3 = await ollamaProvider.callWithSystemMessage(
 );
 
 // Or use Anthropic provider directly
-const response4 = await anthropicProvider.call(
+const response5 = await anthropicProvider.call(
   "Write a haiku about coding",
   {
     model: "claude-3-5-sonnet-20241022",
@@ -172,11 +185,21 @@ const response4 = await anthropicProvider.call(
   }
 );
 
+// Or use Gemini provider directly
+const response6 = await geminiProvider.call(
+  "Write a haiku about coding",
+  {
+    model: "gemini-1.5-pro",
+    authToken: process.env.GEMINI_API_KEY,
+    maxOutputTokens: 1024
+  }
+);
+
 // Set default provider for your application
 llmService.setDefaultProvider(LLMProvider.OLLAMA);
 
 // Now calls use Ollama by default
-const response5 = await llmService.call("Hello!", { model: "llama2" });
+const response7 = await llmService.call("Hello!", { model: "llama2" });
 ```
 
 For more details on the multi-provider system, see the [LLM Providers Guide](docs/LLM_PROVIDERS.md).
@@ -294,9 +317,13 @@ MODEL1_TOKEN=optional-auth-token   # Optional: For authenticated providers
 # Anthropic API Configuration (Optional)
 ANTHROPIC_API_KEY=your_anthropic_api_key_here    # Your Anthropic API key
 ANTHROPIC_MODEL=claude-3-5-sonnet-20241022       # Default Claude model
+
+# Google Gemini API Configuration (Optional)
+GEMINI_API_KEY=your_gemini_api_key_here          # Your Google Gemini API key
+GEMINI_MODEL=gemini-1.5-pro                      # Default Gemini model
 ```
 
-**Multi-Provider Support:** The middleware is fully integrated with **Ollama** and **Anthropic Claude**. Support for OpenAI and Google is planned. See the [LLM Providers Guide](docs/LLM_PROVIDERS.md) for details on the provider system and how to use or add providers.
+**Multi-Provider Support:** The middleware is fully integrated with **Ollama**, **Anthropic Claude**, and **Google Gemini**. Support for OpenAI is planned. See the [LLM Providers Guide](docs/LLM_PROVIDERS.md) for details on the provider system and how to use or add providers.
 
 </details>
 

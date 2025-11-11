@@ -5,6 +5,122 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] - 2025-11-11
+
+### ✨ Feature: Google Gemini Provider Support
+
+This release adds complete support for **Google Gemini** as a new LLM provider, expanding the middleware's multi-provider architecture.
+
+#### What's New
+
+- **✅ Google Gemini Provider**: Full integration with Google's Gemini API
+  - Support for all Gemini models (gemini-1.5-pro, gemini-1.5-flash, etc.)
+  - Complete request/response handling with proper type definitions
+  - Normalized token usage reporting
+  - Comprehensive error handling and logging
+  - Session management and debugging support
+
+#### Provider Features
+
+```typescript
+import { llmService, LLMProvider, geminiProvider } from '@loonylabs/llm-middleware';
+
+// Use via LLM Service orchestrator
+const response = await llmService.call(
+  "Explain quantum computing",
+  {
+    provider: LLMProvider.GOOGLE,
+    model: "gemini-1.5-pro",
+    authToken: process.env.GEMINI_API_KEY,
+    maxTokens: 1024,
+    temperature: 0.7
+  }
+);
+
+// Or use Gemini provider directly
+const response2 = await geminiProvider.callWithSystemMessage(
+  "Write a story",
+  "You are a creative writer",
+  {
+    model: "gemini-1.5-pro",
+    authToken: process.env.GEMINI_API_KEY,
+    maxOutputTokens: 2048,
+    topP: 0.95,
+    topK: 40,
+    temperature: 0.9
+  }
+);
+```
+
+#### Configuration
+
+Add to your `.env` file:
+
+```env
+# Google Gemini API Configuration
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-1.5-pro
+```
+
+#### Gemini-Specific Parameters
+
+- `topP`: Nucleus sampling (0.0 to 1.0)
+- `topK`: Top-K sampling
+- `stopSequences`: Custom stop sequences
+- `candidateCount`: Number of response variations
+- `maxOutputTokens`: Maximum tokens to generate
+
+#### Architecture
+
+**New Files:**
+- `src/middleware/services/llm/types/gemini.types.ts` - Gemini-specific type definitions
+- `src/middleware/services/llm/providers/gemini-provider.ts` - Gemini provider implementation
+
+**Updated Files:**
+- `src/middleware/services/llm/providers/index.ts` - Export Gemini provider
+- `src/middleware/services/llm/types/index.ts` - Export Gemini types
+- `src/middleware/services/llm/llm.service.ts` - Register Gemini provider
+- `README.md` - Updated documentation with Gemini examples
+- `package.json` - Version bump to 2.9.0
+
+#### Provider Support Matrix
+
+| Provider | Status | Models |
+|----------|--------|--------|
+| Ollama | ✅ Fully Supported | All local models |
+| Anthropic Claude | ✅ Fully Supported | Opus, Sonnet, Haiku |
+| Google Gemini | ✅ Fully Supported | Pro, Flash |
+| OpenAI | 🔜 Planned | - |
+
+#### Benefits
+
+- 🌐 **Multi-Provider Flexibility**: Choose the best model for your use case
+- 🔄 **Consistent Interface**: Same API across all providers
+- 📊 **Normalized Responses**: Provider-agnostic token usage and metadata
+- 🔧 **Provider-Specific Features**: Access Gemini-specific parameters when needed
+- 🛡️ **Type Safety**: Full TypeScript support with proper type definitions
+
+### Migration Guide
+
+**No breaking changes** - Existing code continues to work without modifications.
+
+**To use Gemini:**
+
+1. Add your Gemini API key to `.env`
+2. Use `LLMProvider.GOOGLE` in your requests
+3. Optionally use Gemini-specific parameters
+
+```typescript
+// In your use case
+class MyGeminiUseCase extends BaseAIUseCase {
+  protected getProvider(): LLMProvider {
+    return LLMProvider.GOOGLE;
+  }
+}
+```
+
+---
+
 ## [2.8.1] - 2025-11-10
 
 ### Fixed

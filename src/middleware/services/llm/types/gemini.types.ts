@@ -1,0 +1,124 @@
+/**
+ * Google Gemini-specific types and interfaces
+ * Based on Google Gemini API: https://ai.google.dev/api/rest
+ */
+
+import { CommonLLMOptions, CommonLLMResponse } from './common.types';
+
+/**
+ * Gemini-specific request options
+ * Extends common options with Gemini-specific parameters
+ */
+export interface GeminiRequestOptions extends CommonLLMOptions {
+  // Gemini-specific parameters
+
+  /** Top-p sampling (nucleus sampling) - Range: 0.0 to 1.0 */
+  topP?: number;
+
+  /** Top-k sampling - Only sample from top K options */
+  topK?: number;
+
+  /** Stop sequences that will cause the model to stop generating */
+  stopSequences?: string[];
+
+  /** Candidate count - number of response variations to generate */
+  candidateCount?: number;
+
+  /** Maximum number of tokens to generate (Gemini uses maxOutputTokens) */
+  maxOutputTokens?: number;
+}
+
+/**
+ * Gemini content part (text or other types)
+ */
+export interface GeminiPart {
+  text: string;
+}
+
+/**
+ * Gemini message content
+ */
+export interface GeminiContent {
+  role: 'user' | 'model';
+  parts: GeminiPart[];
+}
+
+/**
+ * Gemini generation configuration
+ */
+export interface GeminiGenerationConfig {
+  temperature?: number;
+  topP?: number;
+  topK?: number;
+  candidateCount?: number;
+  maxOutputTokens?: number;
+  stopSequences?: string[];
+}
+
+/**
+ * Gemini safety settings
+ */
+export interface GeminiSafetySetting {
+  category: string;
+  threshold: string;
+}
+
+/**
+ * Gemini API request payload
+ */
+export interface GeminiAPIRequest {
+  contents: GeminiContent[];
+  generationConfig?: GeminiGenerationConfig;
+  safetySettings?: GeminiSafetySetting[];
+  systemInstruction?: {
+    parts: GeminiPart[];
+  };
+}
+
+/**
+ * Gemini candidate response
+ */
+export interface GeminiCandidate {
+  content: GeminiContent;
+  finishReason?: string;
+  index: number;
+  safetyRatings?: Array<{
+    category: string;
+    probability: string;
+  }>;
+}
+
+/**
+ * Gemini usage metadata
+ */
+export interface GeminiUsageMetadata {
+  promptTokenCount: number;
+  candidatesTokenCount: number;
+  totalTokenCount: number;
+}
+
+/**
+ * Gemini API response format
+ */
+export interface GeminiAPIResponse {
+  candidates: GeminiCandidate[];
+  usageMetadata?: GeminiUsageMetadata;
+  promptFeedback?: {
+    safetyRatings?: Array<{
+      category: string;
+      probability: string;
+    }>;
+  };
+}
+
+/**
+ * Gemini-specific response format (normalized to CommonLLMResponse)
+ */
+export interface GeminiResponse extends CommonLLMResponse {
+  // Gemini-specific fields
+  finishReason?: string;
+  safetyRatings?: Array<{
+    category: string;
+    probability: string;
+  }>;
+}

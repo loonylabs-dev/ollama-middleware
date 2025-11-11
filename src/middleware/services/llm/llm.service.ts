@@ -6,6 +6,7 @@
 import { BaseLLMProvider } from './providers/base-llm-provider';
 import { OllamaProvider } from './providers/ollama-provider';
 import { AnthropicProvider } from './providers/anthropic-provider';
+import { GeminiProvider } from './providers/gemini-provider';
 import { LLMProvider, CommonLLMOptions, CommonLLMResponse } from './types';
 
 export class LLMService {
@@ -17,6 +18,7 @@ export class LLMService {
     // Initialize available providers
     this.providers.set(LLMProvider.OLLAMA, new OllamaProvider());
     this.providers.set(LLMProvider.ANTHROPIC, new AnthropicProvider());
+    this.providers.set(LLMProvider.GOOGLE, new GeminiProvider());
   }
 
   /**
